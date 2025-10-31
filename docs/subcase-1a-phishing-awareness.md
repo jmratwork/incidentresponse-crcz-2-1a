@@ -54,6 +54,11 @@ This guide describes the activities carried out by the instructor and trainees w
 - Successful delivery of the advanced exercises, demonstrating multi-channel coordination, cross-role collaboration and forensic synthesis according to the Reporting Workspace guidelines.
 - Submission of a final report summarising detected risks, findings from the advanced exercises and recommendations to mitigate phishing campaigns.
 
+## Automation helpers
+
+- `provisioning/case-1a/scripts/schedule_rep_lab.sh`: sends payloads such as `examples/lab-schedule.json` to the REP Scheduler using `REP_SCHEDULER_API_BASE` and `REP_API_TOKEN`.
+- `provisioning/case-1a/scripts/export_quiz_report.sh`: exports analytics from the Reporting Workspace through `REP_REPORTING_API_BASE`, reusing `REP_API_TOKEN` and the optional `REP_REPORTING_EXPORT_PATH`.
+
 ## Automatic platform feedback
 - REP Quiz Engine immediately shows correct and incorrect answers, including the explanation associated with each question.
 - REP Practical Labs awards partial scores for every email analysis step (identifying the sender, validating links and reviewing attachments) and raises alerts when evidence has not been documented.
