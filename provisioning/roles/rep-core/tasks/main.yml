@@ -1,4 +1,15 @@
----
+- name: Ensure nginx package is installed
+  ansible.builtin.package:
+    name: "{{ rep_core_nginx_package }}"
+    state: present
+
+- name: Ensure nginx service is enabled and started
+  ansible.builtin.service:
+    name: "{{ rep_core_nginx_service }}"
+    state: started
+    enabled: true
+  notify: reload nginx
+
 - name: Ensure REP directories exist
   ansible.builtin.file:
     path: "{{ item }}"
@@ -70,18 +81,31 @@
   when: rep_core_shared_secret | length > 0
   no_log: true
 
-#- name: Validate nginx configuration syntax
-#  ansible.builtin.command: nginx -t
-#  register: rep_core_nginx_check
-#  changed_when: false
-#  failed_when: rep_core_nginx_check.rc != 0
+- name: Wait for nginx service to become available
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ rep_core_virtual_host.listen | int }}"
+    timeout: 30
+    sleep: 1
+  when:
+    - rep_core_healthcheck is defined
+    - rep_core_healthcheck.url | length > 0
 
-#- name: Check REP core health endpoint
-#  ansible.builtin.uri:
-#    url: "{{ rep_core_healthcheck.url }}"
-#    method: GET
-#    status_code: "{{ rep_core_healthcheck.status_code | int }}"
-#    validate_certs: "{{ rep_core_healthcheck.validate_certs | bool }}"
-#  register: rep_core_health
-#  failed_when: rep_core_health.status != rep_core_healthcheck.status_code
-#  changed_when: false
+- name: Validate nginx configuration syntax
+  ansible.builtin.command: nginx -t
+  register: rep_core_nginx_check
+  changed_when: false
+  failed_when: rep_core_nginx_check.rc != 0
+
+- name: Check REP core health endpoint
+  ansible.builtin.uri:
+    url: "{{ rep_core_healthcheck.url }}"
+    method: GET
+    status_code: "{{ rep_core_healthcheck.status_code | int }}"
+    validate_certs: "{{ rep_core_healthcheck.validate_certs | bool }}"
+  register: rep_core_health
+  failed_when: rep_core_health.status != rep_core_healthcheck.status_code
+  changed_when: false
+  when:
+    - rep_core_healthcheck is defined
+    - rep_core_healthcheck.url | length > 0
