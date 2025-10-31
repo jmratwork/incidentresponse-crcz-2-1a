@@ -36,11 +36,12 @@
     mode: "0755"
   notify: reload profile for instructor console
 
-#- name: Validate tmux configuration
-#  ansible.builtin.command: "tmux -f {{ instructor_console_tmux_conf }} display-message"
-#  register: instructor_console_tmux_validation
-#  changed_when: false
-#  failed_when: instructor_console_tmux_validation.rc != 0
+- name: Validate tmux configuration
+  ansible.builtin.command:
+    cmd: "bash -lc 'tmux -f {{ instructor_console_tmux_conf }} -L ansible-test start-server \\; list-keys \\; kill-server'"
+  register: instructor_console_tmux_validation
+  changed_when: false
+  failed_when: instructor_console_tmux_validation.rc != 0
 
 - name: Verify instructor console shortcuts are executable
   ansible.builtin.command: "bash -lc 'source {{ instructor_console_aliases }} && type -t {{ instructor_console_shortcuts[0].name | upper }}'"
