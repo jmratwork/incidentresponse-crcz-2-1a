@@ -9,8 +9,8 @@ cicms_nginx_site:
 cicms_tls:
   certificate_path: /etc/nginx/tls/cicms.crt
   key_path: /etc/nginx/tls/cicms.key
-  certificate_content: ""
-  key_content: ""
+  certificate_content: "{{ lookup('ansible.builtin.vars', 'vault_cicms_tls_certificate', default='') }}"
+  key_content: "{{ lookup('ansible.builtin.vars', 'vault_cicms_tls_key', default='') }}"
 cicms_cms_config_path: /etc/cicms/settings.json
 cicms_cms_settings:
   notification_channel: teams
