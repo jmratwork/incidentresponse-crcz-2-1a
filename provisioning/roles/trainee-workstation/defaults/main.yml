@@ -1,6 +1,7 @@
 ---
 trainee_workstation_collector:
   service_name: REPCollector
+  executable_path: C:\\Program Files\\REP\\collector.exe
   config_path: C:\\ProgramData\\REP\\collector.yaml
   log_path: C:\\ProgramData\\REP\\collector.log
   directory: C:\\ProgramData\\REP
