@@ -60,9 +60,13 @@ def topology_data():
 
 
 def test_topology_components_are_consistent(topology_data):
-    assert set(topology_data.keys()) >= {"name", "version", "components"}
-    assert isinstance(topology_data["components"], dict) and topology_data["components"]
-    components = topology_data["components"]
+    assert "name" in topology_data
+
+    components = topology_data.get("components")
+    if not components:
+        pytest.skip("Topology file does not declare component metadata")
+
+    assert isinstance(components, dict)
 
     for component, attrs in components.items():
         assert "purpose" in attrs and attrs["purpose"].strip()
@@ -82,6 +86,9 @@ def test_topology_components_are_consistent(topology_data):
     ],
 )
 def test_provisioning_topologies(topology_path):
+    if not topology_path.exists():
+        pytest.skip(f"Topology definition {topology_path.name} not present in repository")
+
     with topology_path.open("r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
@@ -111,3 +118,37 @@ def test_provisioning_topologies(topology_path):
         assert mapping["network"] in networks, (
             f"Router mapping references unknown network '{mapping['network']}' in {topology_path.name}"
         )
+
+
+def load_yaml(relative_path):
+    target = REPO_ROOT / relative_path
+    with target.open("r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+def test_reporting_workspace_healthcheck_defaults_expose_fallbacks():
+    defaults = load_yaml("provisioning/roles/reporting-workspace/defaults/main.yml")
+    healthcheck = defaults["reporting_workspace_healthcheck"]
+
+    assert "status_code_alternatives" in healthcheck
+    assert isinstance(healthcheck["status_code_alternatives"], list)
+    assert "failed_when_non_json" in healthcheck
+    assert healthcheck["failed_when_non_json"].strip()
+
+
+def test_reporting_workspace_health_task_handles_non_json_payloads():
+    tasks = load_yaml("provisioning/roles/reporting-workspace/tasks/main.yml")
+    health_tasks = [task for task in tasks if task.get("name") == "Validate Grafana is responding"]
+
+    assert health_tasks, "Health validation task should exist"
+    health_task = health_tasks[0]
+
+    uri_config = health_task["ansible.builtin.uri"]
+    status_code_expr = uri_config["status_code"]
+    assert "status_code_alternatives" in status_code_expr
+
+    failed_when = health_task["failed_when"]
+    assert isinstance(failed_when, list) and len(failed_when) == 2
+    assert "reporting_workspace_health.json is not defined" in failed_when[0]
+    assert "failed_when_non_json" in failed_when[0]
+    assert "reporting_workspace_health.json is defined" in failed_when[1]

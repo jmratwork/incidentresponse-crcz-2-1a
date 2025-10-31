@@ -19,5 +19,7 @@ reporting_workspace_dashboards:
 reporting_workspace_healthcheck:
   url: http://127.0.0.1:3000/api/health
   status_code: 200
+  status_code_alternatives: []
+  failed_when_non_json: Grafana health endpoint did not return JSON. Check Grafana service status.
 reporting_workspace_grafana_service: grafana-server
 reporting_workspace_grafana_repositories: []
