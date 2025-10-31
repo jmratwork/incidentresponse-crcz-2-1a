@@ -1,0 +1,5 @@
+---
+- name: restart ng-soar
+  ansible.builtin.service:
+    name: ng-soar
+    state: restarted

@@ -1,0 +1,5 @@
+---
+- name: reload cacao playbooks
+  ansible.builtin.service:
+    name: cacao-playbookd
+    state: reloaded

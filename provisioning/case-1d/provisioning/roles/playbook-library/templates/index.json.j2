@@ -1,0 +1,21 @@
+{
+  "generated": "{{ '%Y-%m-%dT%H:%M:%SZ' | strftime }}",
+  "playbooks": [
+{% for playbook in playbook_library_playbooks %}
+    {
+      "id": "{{ playbook.id }}",
+      "name": "{{ playbook.name }}",
+      "cacao_version": "{{ playbook.cacao_version }}",
+      "enabled": {{ 'true' if playbook.enabled else 'false' }},
+      "triggers": [
+{% for trigger in playbook.triggers %}
+        {
+          "indicator": "{{ trigger.indicator }}",
+          "pattern": "{{ trigger.pattern }}"
+        }{{ ',' if not loop.last else '' }}
+{% endfor %}
+      ]
+    }{{ ',' if not loop.last else '' }}
+{% endfor %}
+  ]
+}

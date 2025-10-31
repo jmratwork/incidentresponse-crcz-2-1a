@@ -1,0 +1,5 @@
+---
+- name: restart telemetry feeder
+  ansible.builtin.service:
+    name: telemetry-feeder
+    state: restarted

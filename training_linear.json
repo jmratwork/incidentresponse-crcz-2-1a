@@ -1,0 +1,218 @@
+{
+  "name": "CyberRangeCZ Practical Modules",
+  "description": "Learning sequence for subcases 1a and 1d in the CyberRangeCZ environment, aimed at instructors and operations teams.",
+  "modules": [
+    {
+      "id": "subcase-1a",
+      "title": "Subcase 1a - Instructor-led training",
+      "phases": [
+        {
+          "name": "Session planning",
+          "activities": [
+            {
+              "step": 1,
+              "description": "The instructor defines objectives, materials and timings for the session within the CyberRangeCZ control panel.",
+              "tools": ["Instructor console", "CyberRangeCZ content repository"]
+            },
+            {
+              "step": 2,
+              "description": "The activity is scheduled in the Random Education Platform (REP) by assigning the introductory modules.",
+              "tools": ["Random Education Platform - Scheduler"]
+            }
+          ]
+        },
+        {
+          "name": "Delivering the class on REP",
+          "activities": [
+            {
+              "step": 3,
+              "description": "The instructor starts the live session, presents objectives and enables the collaborative channels (chat, videoconferencing, whiteboard).",
+              "tools": ["Random Education Platform - Live Session", "Integrated collaborative tools"]
+            },
+            {
+              "step": 4,
+              "description": "REP automatically distributes short theory capsules and guided simulations to each trainee.",
+              "tools": ["Random Education Platform - Content Delivery", "CyberRangeCZ simulators"]
+            }
+          ]
+        },
+        {
+          "name": "Formative quizzes",
+          "activities": [
+            {
+              "step": 5,
+              "description": "Trainees answer interactive quizzes with immediate feedback.",
+              "tools": ["Random Education Platform - Quiz Engine"]
+            },
+            {
+              "step": 6,
+              "description": "The instructor reviews real-time results to identify questions and reinforce key points.",
+              "tools": ["REP analytics dashboard", "Instructor console"]
+            }
+          ]
+        },
+        {
+          "name": "Practical tests and feedback",
+          "activities": [
+            {
+              "step": 7,
+              "description": "Supervised labs or challenges linked to the theoretical content are launched.",
+              "tools": ["Random Education Platform - Practical Labs", "CyberRangeCZ environment"]
+            },
+            {
+              "step": 8,
+              "description": "REP consolidates results and produces a report the instructor uses for the final feedback session.",
+              "tools": ["Random Education Platform - Reporting", "Instructor dashboard"]
+            }
+          ]
+        },
+        {
+          "name": "Multi-channel spear phishing simulation",
+          "activities": [
+            {
+              "step": 9,
+              "description": "The instructor activates a spear phishing campaign combining email, SMS and voice to assess the trainees' initial response.",
+              "tools": ["Multi-channel spear phishing simulator", "CyberRangeCZ email/SMS/VoIP integrations"]
+            },
+            {
+              "step": 10,
+              "description": "Trainees inspect attack vectors, report suspicious indicators and document findings in REP forms.",
+              "tools": ["Random Education Platform - Incident Forms", "Simulation telemetry dashboard"]
+            }
+          ]
+        },
+        {
+          "name": "Collaborative response chain",
+          "activities": [
+            {
+              "step": 11,
+              "description": "A coordination room is created to activate the response chain, integrating secure chat, videoconferencing and a task board in REP.",
+              "tools": ["Random Education Platform - Collaboration Hub", "Incident Kanban board"]
+            },
+            {
+              "step": 12,
+              "description": "Trainees assign roles, share evidence and validate countermeasures through the instructor's collaborative console.",
+              "tools": ["Instructor collaborative console", "Shared evidence repository"]
+            }
+          ]
+        },
+        {
+          "name": "Express forensic report",
+          "activities": [
+            {
+              "step": 13,
+              "description": "Critical artefacts from the exercise (headers, logs, captures) are collected to feed the express report.",
+              "tools": ["Forensic artefact repository", "REP log exporter"]
+            },
+            {
+              "step": 14,
+              "description": "The instructor compiles findings and recommendations in the express forensic report template and shares it with participants.",
+              "tools": ["Express forensic report templates", "Instructor console"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "subcase-1d",
+      "title": "Subcase 1d - NG-SOC operation",
+      "phases": [
+        {
+          "name": "Monitoring and detection",
+          "activities": [
+            {
+              "step": 1,
+              "description": "NG-SIEM gathers telemetry from the CyberRangeCZ environment and raises a prioritised alert.",
+              "tools": ["NG-SIEM"]
+            },
+            {
+              "step": 2,
+              "description": "The NG-SOC analyst validates the alert and selects the appropriate CACAO playbook.",
+              "tools": ["NG-SOC console", "CACAO playbook repository"]
+            }
+          ]
+        },
+        {
+          "name": "Playbook orchestration",
+          "activities": [
+            {
+              "step": 3,
+              "description": "NG-SOC sends the execution order to NG-SOAR together with the incident parameters.",
+              "tools": ["NG-SOC Orchestrator", "NG-SOAR API"]
+            },
+            {
+              "step": 4,
+              "description": "NG-SOAR interprets the CACAO sequence and prepares the required automated and manual actions.",
+              "tools": ["NG-SOAR Engine", "CACAO model"]
+            },
+            {
+              "step": 5,
+              "description": "The specific CACAO playbook against ransomware is enabled, mapping containment and recovery controls to the available connectors.",
+              "tools": ["CACAO playbook repository", "CACAO ransomware template", "NG-SOAR Playbook Manager"]
+            }
+          ]
+        },
+        {
+          "name": "Automated execution",
+          "activities": [
+            {
+              "step": 6,
+              "description": "The playbook performs enrichment, containment and notification tasks on the affected assets.",
+              "tools": ["NG-SOAR connectors", "Endpoint and network integrations"]
+            },
+            {
+              "step": 7,
+              "description": "Response time and effectiveness metrics are recorded for later tracking.",
+              "tools": ["NG-SOAR Metrics", "NG-SOC dashboard"]
+            },
+            {
+              "step": 8,
+              "description": "A connector resilience test is executed to confirm availability of critical integrations after containment.",
+              "tools": ["NG-SOAR Connector Health Check", "NG-SOC integration monitor"]
+            }
+          ]
+        },
+        {
+          "name": "Support from transversal systems",
+          "activities": [
+            {
+              "step": 9,
+              "description": "CICMS Operator centralises evidence and reports associated with the incident while the playbook is running.",
+              "tools": ["CICMS Operator"]
+            },
+            {
+              "step": 10,
+              "description": "CTI-SS supplies threat intelligence to enrich indicators and determine countermeasures.",
+              "tools": ["CTI-SS"]
+            },
+            {
+              "step": 11,
+              "description": "The playbook and standards library (NVD/NIST, MITRE ATT&CK) guides the adaptation of the response plan.",
+              "tools": ["Playbook/standards library"]
+            }
+          ]
+        },
+        {
+          "name": "Closure and feedback",
+          "activities": [
+            {
+              "step": 12,
+              "description": "NG-SOAR updates the incident status in NG-SOC/NG-SIEM and consolidates the case documentation.",
+              "tools": ["NG-SOAR", "NG-SOC console", "NG-SIEM"]
+            },
+            {
+              "step": 13,
+              "description": "CICMS Operator compiles the post-incident report and links the lessons learnt in the playbook library.",
+              "tools": ["CICMS Operator", "Playbook/standards library"]
+            },
+            {
+              "step": 14,
+              "description": "The post-incident control board is convened to present technical findings, validate corrective actions and plan continual improvement.",
+              "tools": ["NG-SOC control board", "Executive dashboard", "Lessons-learnt repository"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

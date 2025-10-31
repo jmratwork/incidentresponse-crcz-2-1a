@@ -1,0 +1,25 @@
+---
+ng_soar_queue_config: /etc/ng-soar/queues.yaml
+ng_soar_queues:
+  - name: enrichment
+    type: rabbitmq
+    durable: true
+    prefetch: 10
+  - name: containment
+    type: rabbitmq
+    durable: true
+    prefetch: 5
+ng_soar_integrations:
+  - name: siem_ingest
+    type: rest
+    endpoint: https://ng-siem.internal/api/playbooks
+    token: changeme
+  - name: cacao_broker
+    type: kafka
+    brokers:
+      - kafka1.internal:9092
+      - kafka2.internal:9092
+    topic: cacao.playbooks
+ng_soar_healthcheck:
+  url: http://127.0.0.1:8080/healthz
+  status_code: 200

@@ -1,0 +1,16 @@
+{
+  "id": "{{ playbook.id }}",
+  "name": "{{ playbook.name }}",
+  "cacao_version": "{{ playbook.cacao_version }}",
+  "enabled": {{ 'true' if playbook.enabled else 'false' }},
+  "workflow": {
+    "triggers": [
+{% for trigger in playbook.triggers %}
+      {
+        "indicator": "{{ trigger.indicator }}",
+        "pattern": "{{ trigger.pattern }}"
+      }{{ ',' if not loop.last else '' }}
+{% endfor %}
+    ]
+  }
+}

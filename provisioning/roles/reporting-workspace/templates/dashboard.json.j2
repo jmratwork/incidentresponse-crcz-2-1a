@@ -1,0 +1,21 @@
+{
+  "uid": "{{ dashboard.uid }}",
+  "title": "{{ dashboard.title }}",
+  "schemaVersion": 36,
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Live Session Attendance",
+      "datasource": "rep_postgresql",
+      "targets": [
+        {
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawSql": "SELECT time, attendance FROM attendance_metrics ORDER BY time",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

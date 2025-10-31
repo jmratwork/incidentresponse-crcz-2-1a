@@ -1,0 +1,5 @@
+---
+- name: restart cti sharing service
+  ansible.builtin.service:
+    name: cti-ss
+    state: restarted

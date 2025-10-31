@@ -1,0 +1,24 @@
+---
+instructor_console_user: instructor
+instructor_console_workspace: /opt/instructor-console
+instructor_console_tmux_conf: /home/{{ instructor_console_user }}/.tmux.conf
+instructor_console_aliases: /etc/profile.d/instructor-console.sh
+instructor_console_shortcuts:
+  - name: launch_scheduler
+    command: "ssh rep-scheduler"
+  - name: launch_quiz_dashboard
+    command: "firefox https://rep-core.internal/quiz"
+  - name: open_ticket_queue
+    command: "ssh soc-queue"
+instructor_console_tmux_settings:
+  mouse_mode: true
+  history_limit: 10000
+  status_bar_colour: '#268bd2'
+  windows:
+    - name: scheduler
+      command: "ssh rep-scheduler"
+    - name: broadcast
+      command: "ssh rep-live-session"
+    - name: monitoring
+      command: "ssh reporting-workspace"
+instructor_console_healthcheck_command: "tmux list-sessions"

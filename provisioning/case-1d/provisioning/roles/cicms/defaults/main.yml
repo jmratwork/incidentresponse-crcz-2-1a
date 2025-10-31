@@ -1,0 +1,23 @@
+---
+cicms_nginx_site:
+  listen: 8443
+  server_name: cicms.internal
+  root: /srv/cicms/public
+  healthcheck_path: /status
+  upstreams:
+    - 127.0.0.1:9201
+cicms_tls:
+  certificate_path: /etc/nginx/tls/cicms.crt
+  key_path: /etc/nginx/tls/cicms.key
+  certificate_content: ""
+  key_content: ""
+cicms_cms_config_path: /etc/cicms/settings.json
+cicms_cms_settings:
+  notification_channel: teams
+  upstream_smtp: smtp.internal:587
+  taxonomy_feed: https://cti-ss.internal/taxii/
+  approval_workflow: two_person_rule
+cicms_healthcheck:
+  url: https://127.0.0.1:8443/status
+  status_code: 200
+  validate_certs: false

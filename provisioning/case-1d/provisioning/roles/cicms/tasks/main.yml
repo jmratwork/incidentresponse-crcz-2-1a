@@ -1,0 +1,213 @@
+---
+- name: Ensure CICMS directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  loop:
+    - /etc/nginx/sites-available
+    - /etc/nginx/sites-enabled
+    - /etc/nginx/tls
+    - /etc/cicms
+
+- name: Deploy CICMS nginx configuration
+  ansible.builtin.template:
+    src: nginx-cicms.conf.j2
+    dest: /etc/nginx/sites-available/cicms.conf
+    owner: root
+    group: root
+    mode: "0640"
+  notify: reload cicms nginx
+
+- name: Enable CICMS nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/cicms.conf
+    dest: /etc/nginx/sites-enabled/cicms.conf
+    state: link
+  notify: reload cicms nginx
+
+- name: Install CICMS TLS certificate
+  ansible.builtin.copy:
+    dest: "{{ cicms_tls.certificate_path }}"
+    content: "{{ cicms_tls.certificate_content }}"
+    owner: root
+    group: root
+    mode: "0640"
+  when: cicms_tls.certificate_content | length > 0
+  notify: reload cicms nginx
+
+- name: Install CICMS TLS key
+  ansible.builtin.copy:
+    dest: "{{ cicms_tls.key_path }}"
+    content: "{{ cicms_tls.key_content }}"
+    owner: root
+    group: root
+    mode: "0600"
+  when: cicms_tls.key_content | length > 0
+  notify: reload cicms nginx
+  no_log: true
+
+- name: Render CICMS CMS settings
+  ansible.builtin.template:
+    src: settings.json.j2
+    dest: "{{ cicms_cms_config_path }}"
+    owner: root
+    group: root
+    mode: "0640"
+
+- name: Validate CICMS nginx syntax
+  ansible.builtin.command: nginx -t
+  register: cicms_nginx_check
+  changed_when: false
+  failed_when: cicms_nginx_check.rc != 0
+
+- name: Check CICMS health endpoint
+  ansible.builtin.uri:
+    url: "{{ cicms_healthcheck.url }}"
+    method: GET
+    status_code: {{ cicms_healthcheck.status_code | int }}
+    validate_certs: {{ cicms_healthcheck.validate_certs | bool }}
+  register: cicms_health
+  failed_when: cicms_health.status != cicms_healthcheck.status_code
+  changed_when: false
+
+
+#Added tasks
+- name: Install Docker prerequisites
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - smbclient
+      - cifs-utils
+      - unzip
+    state: present
+    update_cache: yes
+
+- name: Create /etc/apt/keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+
+- name: Add Docker APT repository
+  ansible.builtin.shell: |
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  args:
+    creates: /etc/apt/sources.list.d/docker.list
+  register: repo_add
+  changed_when: repo_add.rc == 0
+
+- name: Update APT cache after adding repository
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install Docker packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+
+- name: Ensure Docker service is started and enabled
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Create mount point
+  ansible.builtin.file:
+    path: "/mnt/smb_shared"
+    state: directory
+    mode: "0775"
+    
+- name: Mount SMB Share (guest)
+  ansible.builtin.mount:
+    src: "//10.250.232.198/shared"
+    path: "/mnt/smb_shared"
+    fstype: cifs
+    opts: "guest,vers=3.0"
+    state: mounted
+
+- name: Copy DFIR-IRIS zip from SMB to destination
+  copy:
+    src: "/mnt/smb_shared/dfir-iris-custom.zip"
+    dest: "/opt/dfir-iris-custom.zip"
+    remote_src: true
+    mode: "0644"
+
+- name: Unzip DFIR-IRIS Docker
+  unarchive:
+    src: "/opt/dfir-iris-custom.zip"
+    dest: "/opt/"
+    remote_src: true
+    extra_opts: ["-o"]
+
+- name: Login to Docker Hub
+  community.docker.docker_login:
+    username: demongsoc
+    password: "dckr_pat_OzOR3rfLKW3QcFAFUfAi_Je_5_Q"
+
+- name: Deploy Portainer
+  community.docker.docker_container:
+    name: portainer
+    image: portainer/portainer-ce:latest
+    state: started
+    restart_policy: always
+    ports: 
+      - "9443:9443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "portainer_data:/data"
+  register: portainer_output
+
+- name: Inject MISP integration settings into DFIR-IRIS .env
+  lineinfile:
+    path: /opt/dfir-iris-custom/.env
+    regexp: '^IRIS_MISP_URL='
+    line: "IRIS_MISP_URL=https://10.30.30.10:8443"
+    state: present
+
+- name: Disable SSL verification for MISP connection
+  lineinfile:
+    path: /opt/dfir-iris-custom/.env
+    regexp: '^IRIS_MISP_VERIFY_CERT='
+    line: "IRIS_MISP_VERIFY_CERT=false"
+
+- name: Inject MISP key into DFIR-IRIS .env
+  lineinfile:
+    path: /opt/dfir-iris-custom/.env
+    regexp: '^IRIS_MISP_KEY='
+    line: "IRIS_MISP_KEY={{ hostvars['cti_ss'].misp_api_key }}"
+    state: present
+
+- name: Build and run DFIR-IRIS
+  community.docker.docker_compose_v2:
+    project_src: "/opt/dfir-iris-custom"
+    state: present
+    build: always
+  register: dfir_iris_output
+
+- name: Show Docker Compose output
+  ansible.builtin.debug:
+    msg: |
+      DFIR_IRIS: {{ dfir_iris_output | default('No output captured') }}
+      Portainer: {{portainer_output | default('No output caprured') }}
+
+- name: Unmount SMB share
+  ansible.builtin.mount:
+    path: "/mnt/smb_shared"
+    state: unmounted
+  when: true

@@ -1,0 +1,40 @@
+---
+- name: Ensure cacao group exists
+  ansible.builtin.group:
+    name: cacao
+    system: true
+
+- name: Ensure playbook library root exists
+  ansible.builtin.file:
+    path: "{{ playbook_library_root }}"
+    state: directory
+    owner: root
+    group: cacao
+    mode: "0750"
+
+- name: Deploy CACAO playbooks
+  ansible.builtin.template:
+    src: playbook.json.j2
+    dest: "{{ playbook_library_root }}/{{ playbook.id }}.json"
+    owner: root
+    group: cacao
+    mode: "0640"
+  loop: "{{ playbook_library_playbooks | list }}"
+  loop_control:
+    loop_var: playbook
+  notify: reload cacao playbooks
+
+- name: Publish playbook index metadata
+  ansible.builtin.template:
+    src: index.json.j2
+    dest: "{{ playbook_library_metadata }}"
+    owner: root
+    group: cacao
+    mode: "0640"
+  notify: reload cacao playbooks
+
+- name: Validate CACAO library
+  ansible.builtin.command: "{{ playbook_library_healthcheck_command }}"
+  register: playbook_library_validation
+  changed_when: false
+  failed_when: playbook_library_validation.rc != 0

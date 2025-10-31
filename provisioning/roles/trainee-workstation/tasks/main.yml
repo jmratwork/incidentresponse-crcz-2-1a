@@ -1,0 +1,48 @@
+---
+- name: Ensure REP data directory exists
+  ansible.windows.win_file:
+    path: "{{ trainee_workstation_collector.directory }}"
+    state: directory
+  when: ansible_facts.os_family | default('') == 'Windows'
+
+- name: Ensure trainee labs directory exists
+  ansible.windows.win_file:
+    path: "{{ trainee_workstation_welcome_note.directory }}"
+    state: directory
+  when: ansible_facts.os_family | default('') == 'Windows'
+
+- name: Deploy trainee welcome note
+  ansible.windows.win_copy:
+    dest: "{{ trainee_workstation_welcome_note.path | default(trainee_workstation_welcome_note.directory ~ '\\\\' ~ trainee_workstation_welcome_note.filename) }}"
+    content: "{{ trainee_workstation_welcome_note.content }}"
+  when: ansible_facts.os_family | default('') == 'Windows'
+
+- name: Deploy collector configuration
+  ansible.windows.win_template:
+    src: collector.yaml.j2
+    dest: "{{ trainee_workstation_collector.config_path }}"
+  when: ansible_facts.os_family | default('') == 'Windows'
+  notify: restart rep collector
+  no_log: true
+
+- name: Publish trainee shortcuts
+  ansible.windows.win_template:
+    src: shortcut.url.j2
+    dest: "{{ shortcut.path }}"
+  loop: "{{ trainee_workstation_shortcuts | list }}"
+  loop_control:
+    loop_var: shortcut
+  when: ansible_facts.os_family | default('') == 'Windows'
+
+#- name: Ensure collector service is running
+#  ansible.windows.win_service:
+#    name: "{{ trainee_workstation_collector.service_name }}"
+#    state: started
+#  when: ansible_facts.os_family | default('') == 'Windows'
+
+#- name: Validate collector service status
+#  ansible.windows.win_shell: "{{ trainee_workstation_health_command }}"
+#  register: trainee_collector_health
+#  changed_when: false
+#  failed_when: trainee_collector_health.rc != 0 or 'Running' not in trainee_collector_health.stdout
+#  when: ansible_facts.os_family | default('') == 'Windows'

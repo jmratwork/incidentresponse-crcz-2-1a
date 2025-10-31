@@ -1,0 +1,34 @@
+- name: Ensure ng-siem service identity exists
+  ansible.builtin.group:
+    name: ng-siem
+    state: present
+
+- name: Ensure ng-siem pipeline directory exists
+  ansible.builtin.file:
+    path: "{{ ng_siem_pipeline_config | dirname }}"
+    state: directory
+    owner: root
+    group: ng-siem
+    mode: "0750"
+
+- name: Configure ng-siem pipeline
+  ansible.builtin.template:
+    src: pipeline.conf.j2
+    dest: "{{ ng_siem_pipeline_config }}"
+    owner: root
+    group: ng-siem
+    mode: "0640"
+  notify: reload ng-siem pipelines
+  no_log: true
+
+- name: Validate ng-siem pipeline configuration
+  ansible.builtin.command: "ng-siemctl pipeline lint {{ ng_siem_pipeline.name }} --config {{ ng_siem_pipeline_config }}"
+  register: ng_siem_lint
+  changed_when: false
+  failed_when: ng_siem_lint.rc != 0
+
+- name: Check ng-siem pipeline status
+  ansible.builtin.command: "{{ ng_siem_healthcheck.command }}"
+  register: ng_siem_status
+  changed_when: false
+  failed_when: ng_siem_status.rc != 0 or 'healthy' not in ng_siem_status.stdout.lower()

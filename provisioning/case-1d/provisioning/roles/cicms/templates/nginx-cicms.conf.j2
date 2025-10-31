@@ -1,0 +1,25 @@
+server {
+    listen {{ cicms_nginx_site.listen }} ssl;
+    server_name {{ cicms_nginx_site.server_name }};
+    root {{ cicms_nginx_site.root }};
+
+    ssl_certificate {{ cicms_tls.certificate_path }};
+    ssl_certificate_key {{ cicms_tls.key_path }};
+
+    location / {
+        proxy_pass http://cicms_backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+
+    location = {{ cicms_nginx_site.healthcheck_path }} {
+        proxy_pass http://cicms_backend;
+        access_log off;
+    }
+}
+
+upstream cicms_backend {
+{% for upstream in cicms_nginx_site.upstreams %}
+    server {{ upstream }};
+{% endfor %}
+}

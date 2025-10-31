@@ -1,0 +1,5 @@
+---
+- name: reload cicms nginx
+  ansible.builtin.service:
+    name: nginx
+    state: reloaded

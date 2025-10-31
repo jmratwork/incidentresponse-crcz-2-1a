@@ -1,0 +1,98 @@
+name: subcase_1d_ng_soc_operation
+hosts:
+  - name: ng-soc
+    base_box:
+      image: ubuntu-noble-x86_64
+      mgmt_user: ubuntu
+    flavor: standard.medium
+  - name: ng-siem
+    base_box:
+      image: ubuntu-noble-x86_64
+      mgmt_user: ubuntu
+    flavor: standard.small
+  - name: ng-soar
+    base_box:
+      image: ubuntu-noble-x86_64
+      mgmt_user: ubuntu
+    flavor: standard.small
+  - name: cti-ss
+    base_box:
+      image: ubuntu-noble-x86_64
+      mgmt_user: ubuntu
+    flavor: standard.small
+  - name: cicms-operator
+    base_box:
+      image: ubuntu-noble-x86_64
+      mgmt_user: ubuntu
+    flavor: standard.small
+  - name: playbook-library
+    base_box:
+      image: ubuntu-noble-x86_64
+      mgmt_user: ubuntu
+    flavor: standard.small
+  - name: telemetry-simulator
+    base_box:
+      image: ubuntu-noble-x86_64
+      mgmt_user: ubuntu
+    flavor: standard.small
+routers:
+  - name: ng-ops-gateway
+    base_box:
+      image: debian-12-x86_64
+      mgmt_user: debian
+    flavor: standard.small
+networks:
+  - name: soc-operations
+    cidr: 10.30.10.0/24
+    accessible_by_user: False
+  - name: automation-zone
+    cidr: 10.30.20.0/24
+    accessible_by_user: False
+  - name: intelligence-zone
+    cidr: 10.30.30.0/24
+    accessible_by_user: False
+  - name: coordination-zone
+    cidr: 10.30.40.0/24
+    accessible_by_user: False
+  - name: telemetry-zone
+    cidr: 10.30.50.0/24
+    accessible_by_user: False
+net_mappings:
+  - host: ng-soc
+    network: soc-operations
+    ip: 10.30.10.10
+  - host: ng-siem
+    network: soc-operations
+    ip: 10.30.10.20
+  - host: ng-soar
+    network: automation-zone
+    ip: 10.30.20.10
+  - host: cti-ss
+    network: intelligence-zone
+    ip: 10.30.30.10
+  - host: playbook-library
+    network: intelligence-zone
+    ip: 10.30.30.20
+  - host: cicms-operator
+    network: coordination-zone
+    ip: 10.30.40.10
+  - host: telemetry-simulator
+    network: telemetry-zone
+    ip: 10.30.50.10
+router_mappings:
+  - router: ng-ops-gateway
+    network: soc-operations
+    ip: 10.30.10.1
+  - router: ng-ops-gateway
+    network: automation-zone
+    ip: 10.30.20.1
+  - router: ng-ops-gateway
+    network: intelligence-zone
+    ip: 10.30.30.1
+  - router: ng-ops-gateway
+    network: coordination-zone
+    ip: 10.30.40.1
+  - router: ng-ops-gateway
+    network: telemetry-zone
+    ip: 10.30.50.1
+groups: []

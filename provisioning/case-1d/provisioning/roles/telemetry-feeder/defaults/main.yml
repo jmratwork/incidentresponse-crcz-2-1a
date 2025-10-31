@@ -1,0 +1,21 @@
+---
+telemetry_feeder_agent_config: /etc/telemetry-feeder/agent.yaml
+telemetry_feeder_agent:
+  buffers:
+    size_mb: 128
+    flush_interval: 5
+  outputs:
+    - type: tcp
+      host: ng-siem.internal
+      port: 5514
+    - type: taxii
+      url: https://cti-ss.internal/taxii/
+      collection: rep-threats
+      username: telemetry-feeder
+      password: changeme
+  transforms:
+    - name: redact_pi
+      type: regex
+      pattern: "(?i)(ssn|creditcard)"
+      replacement: "<redacted>"
+telemetry_feeder_healthcheck_url: http://127.0.0.1:9200/health

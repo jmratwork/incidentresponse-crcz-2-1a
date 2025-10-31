@@ -1,0 +1,83 @@
+---
+- name: Ensure grafana group exists
+  ansible.builtin.group:
+    name: grafana
+    system: true
+
+- name: Ensure grafana user exists
+  ansible.builtin.user:
+    name: grafana
+    group: grafana
+    system: true
+
+- name: Ensure Grafana provisioning directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: grafana
+    mode: "0750"
+  loop:
+    - "{{ reporting_workspace_datasource_template | dirname }}"
+    - "{{ reporting_workspace_dashboards_dir }}"
+
+- name: Deploy Grafana main configuration
+  ansible.builtin.template:
+    src: grafana.ini.j2
+    dest: "{{ reporting_workspace_grafana_ini }}"
+    owner: root
+    group: root
+    mode: "0640"
+  notify: restart grafana
+
+- name: Configure Grafana data sources for REP
+  ansible.builtin.template:
+    src: datasources.yaml.j2
+    dest: "{{ reporting_workspace_datasource_template }}"
+    owner: root
+    group: grafana
+    mode: "0640"
+  notify: restart grafana
+  no_log: true
+
+- name: Register Grafana dashboard providers
+  ansible.builtin.template:
+    src: dashboards.yaml.j2
+    dest: "{{ reporting_workspace_dashboards_dir }}/rep-provider.yaml"
+    owner: root
+    group: grafana
+    mode: "0640"
+  notify: restart grafana
+
+- name: Ensure dashboard folders exist
+  ansible.builtin.file:
+    path: "{{ reporting_workspace_dashboards_dir }}/{{ dashboard.folder | lower }}"
+    state: directory
+    owner: root
+    group: grafana
+    mode: "0750"
+  loop: "{{ reporting_workspace_dashboards | list }}"
+  loop_control:
+    loop_var: dashboard
+
+- name: Deploy REP dashboards
+  ansible.builtin.template:
+    src: dashboard.json.j2
+    dest: "{{ reporting_workspace_dashboards_dir }}/{{ dashboard.folder | lower }}/{{ dashboard.file }}"
+    owner: root
+    group: grafana
+    mode: "0640"
+  loop: "{{ reporting_workspace_dashboards | list }}"
+  loop_control:
+    loop_var: dashboard
+  notify: restart grafana
+
+#- name: Validate Grafana is responding
+#  ansible.builtin.uri:
+#    url: "{{ reporting_workspace_healthcheck.url }}"
+#    method: GET
+#    status_code: "{{ reporting_workspace_healthcheck.status_code | int }}"
+#    return_content: true
+#  register: reporting_workspace_health
+#  failed_when: reporting_workspace_health.json.database != 'ok'
+#  changed_when: false

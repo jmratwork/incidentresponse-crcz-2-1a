@@ -1,0 +1,154 @@
+- name: Ensure ng-soar group exists
+  ansible.builtin.group:
+    name: ng-soar
+    state: present
+
+- name: Ensure ng-soar service user exists
+  ansible.builtin.user:
+    name: ng-soar
+    group: ng-soar
+    system: true
+    create_home: false
+
+- name: Ensure ng-soar configuration directory exists
+  ansible.builtin.file:
+    path: "{{ ng_soar_queue_config | dirname }}"
+    state: directory
+    owner: root
+    group: ng-soar
+    mode: "0750"
+
+- name: Deploy ng-soar queue definitions
+  ansible.builtin.template:
+    src: queues.yaml.j2
+    dest: "{{ ng_soar_queue_config }}"
+    owner: root
+    group: ng-soar
+    mode: "0640"
+  notify: restart ng-soar
+  no_log: true
+
+- name: Validate ng-soar queues
+  ansible.builtin.command: "ng-soarctl validate --config {{ ng_soar_queue_config }}"
+  register: ng_soar_validation
+  changed_when: false
+  failed_when: ng_soar_validation.rc != 0
+
+- name: Check ng-soar API health
+  ansible.builtin.uri:
+    url: "{{ ng_soar_healthcheck.url }}"
+    method: GET
+    status_code: {{ ng_soar_healthcheck.status_code | int }}
+  register: ng_soar_health
+  failed_when: ng_soar_health.status != ng_soar_healthcheck.status_code
+  changed_when: false
+
+#Added Tasks
+- name: Install Docker prerequisites
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - smbclient
+      - cifs-utils
+      - unzip
+    state: present
+    update_cache: yes
+
+- name: Create /etc/apt/keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+
+- name: Add Docker APT repository
+  ansible.builtin.shell: |
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  args:
+    creates: /etc/apt/sources.list.d/docker.list
+  register: repo_add
+  changed_when: repo_add.rc == 0
+
+- name: Update APT cache after adding repository
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install Docker packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+
+- name: Ensure Docker service is started and enabled
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Create mount point
+  ansible.builtin.file:
+    path: "/mnt/smb_shared"
+    state: directory
+    mode: "0775"
+    
+- name: Mount SMB Share (guest)
+  ansible.builtin.mount:
+    src: "//10.250.232.198/shared"
+    path: "/mnt/smb_shared"
+    fstype: cifs
+    opts: "guest,vers=3.0"
+    state: mounted
+
+- name: Create NG-SOAR directory for the yml
+  file:
+    path: "/opt/NG-SOAR"
+    state: directory
+    mode: "0755"
+
+- name: Copy NG-SOAR yml from SMB to destination
+  copy:
+    src: "/mnt/smb_shared/NG-SOAR.yml"
+    dest: "/opt/NG-SOAR/docker-compose.yml"
+    remote_src: true
+    mode: "0644"
+
+- name: Login to Docker Hub
+  community.docker.docker_login:
+    username: demongsoc
+    password: "dckr_pat_OzOR3rfLKW3QcFAFUfAi_Je_5_Q"
+
+- name: Deploy Portainer
+  community.docker.docker_container:
+    name: portainer
+    image: portainer/portainer-ce:latest
+    state: started
+    restart_policy: always
+    ports: 
+      - "9443:9443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "portainer_data:/data"
+  register: portainer_output
+
+- name: Show Docker Compose output
+  ansible.builtin.debug:
+    msg: |
+      NG-SOAR: {{ NG_SOAR_output | default('No output captured') }}
+      Portainer: {{portainer_output | default('No output caprured') }}
+
+- name: Unmount SMB share
+  ansible.builtin.mount:
+    path: "/mnt/smb_shared"
+    state: unmounted
+  when: true

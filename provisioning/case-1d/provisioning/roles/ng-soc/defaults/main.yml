@@ -1,0 +1,21 @@
+---
+ng_soc_dashboard_config: /etc/ng-soc/dashboard.yaml
+ng_soc_widgets:
+  - id: live-incidents
+    title: Live Incidents
+    datasource: ng-siem
+    query: severity:>=medium
+  - id: response-progress
+    title: Response Progress
+    datasource: ng-soar
+    query: status:active
+ng_soc_alert_routes:
+  - name: tier1
+    severity: medium
+    destination: teams://soc-tier1
+  - name: tier2
+    severity: high
+    destination: pagerduty://soc-tier2
+ng_soc_healthcheck:
+  url: http://127.0.0.1:5601/api/status
+  status_code: 200

@@ -1,0 +1,174 @@
+---
+- name: Ensure CTI sharing service directory exists
+  ansible.builtin.file:
+    path: "{{ cti_ss_taxii_config | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Configure TAXII collections
+  ansible.builtin.template:
+    src: taxii.yaml.j2
+    dest: "{{ cti_ss_taxii_config }}"
+    owner: root
+    group: root
+    mode: "0640"
+  notify: restart cti sharing service
+  no_log: true
+
+- name: Validate CTI sharing daemon configuration
+  ansible.builtin.command: "cti-ssctl configtest --config {{ cti_ss_taxii_config }}"
+  register: cti_ss_configtest
+  changed_when: false
+  failed_when: cti_ss_configtest.rc != 0
+
+- name: Check CTI sharing service status
+  ansible.builtin.command: "{{ cti_ss_healthcheck_command }}"
+  register: cti_ss_status
+  changed_when: false
+  failed_when: cti_ss_status.rc != 0 or 'running' not in cti_ss_status.stdout.lower()
+
+#Added Tasks
+- name: Install Docker prerequisites
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - smbclient
+      - cifs-utils
+      - unzip
+    state: present
+    update_cache: yes
+
+- name: Create /etc/apt/keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+
+- name: Add Docker APT repository
+  ansible.builtin.shell: |
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  args:
+    creates: /etc/apt/sources.list.d/docker.list
+  register: repo_add
+  changed_when: repo_add.rc == 0
+
+- name: Update APT cache after adding repository
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install Docker packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+
+- name: Ensure Docker service is started and enabled
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Create mount point
+  ansible.builtin.file:
+    path: "/mnt/smb_shared"
+    state: directory
+    mode: "0775"
+    
+- name: Mount SMB Share (guest)
+  ansible.builtin.mount:
+    src: "//10.250.232.198/shared"
+    path: "/mnt/smb_shared"
+    fstype: cifs
+    opts: "guest,vers=3.0"
+    state: mounted
+
+- name: Create MISP directory for the git repo
+  file:
+    path: "/opt/misp-docker"
+    state: directory
+    mode: "0755"
+
+- name: Login to Docker Hub
+  community.docker.docker_login:
+    username: demongsoc
+    password: "dckr_pat_OzOR3rfLKW3QcFAFUfAi_Je_5_Q"
+
+- name: Download MISP docker
+  git:
+    repo: "https://github.com/MISP/misp-docker.git"
+    dest: "/opt/misp-docker"
+    version: "master"
+  
+- name: Copy MISP env
+  copy:
+    src: /opt/misp-docker/template.env
+    dest: /opt/misp-docker/.env
+    remote_src: yes
+
+- name: Change env http port for MISP
+  lineinfile:
+    path: /opt/misp-docker/.env
+    regexp: '^#?\s*CORE_HTTP_PORT='
+    line: CORE_HTTP_PORT=8082
+    state: present
+
+- name: Change env https port for MISP
+  lineinfile:
+    path: /opt/misp-docker/.env
+    regexp: '^#?\s*CORE_HTTPS_PORT='
+    line: CORE_HTTPS_PORT=8443
+    state: present
+
+- name: Change BASE_URL in env for MISP
+  lineinfile:
+    path: /opt/misp-docker/.env
+    regexp: '^#?\s*BASE_URL='
+    line: 'BASE_URL=https://10.30.30.10:8443'
+    state: present
+    insertafter: EOF
+    backup: yes
+
+- name: Deployment of MISP Docker
+  community.docker.docker_compose_v2:
+    project_src: "/opt/misp-docker"
+    state: present
+    build: always
+  register: misp_output
+
+- name: Deploy Portainer
+  community.docker.docker_container:
+    name: portainer
+    image: portainer/portainer-ce:latest
+    state: started
+    restart_policy: always
+    ports: 
+      - "9443:9443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "portainer_data:/data"
+  register: portainer_output
+
+- name: Get or generate MISP API key for admin user
+  community.docker.docker_container_exec:
+    container: misp-docker-misp-core-1
+    command: "/var/www/MISP/app/Console/cake user change_authkey admin@admin.test"
+  register: misp_user_info
+
+- name: Save MISP API key fact
+  set_fact:
+    misp_api_key: "{{ misp_user_info.stdout.split('Old authentication keys disabled and new key created: ')[1] | trim }}"
+  delegate_facts: true

@@ -1,0 +1,24 @@
+---
+#Playbook for case 1a
+- name: Configure REP core services
+  hosts: rep-scheduler, rep-live-session, rep-quiz-engine, rep-practical-labs
+  become: true
+  roles:
+    - role: rep-core
+
+- name: Prepare the reporting workspace analytics stack
+  hosts: reporting-workspace
+  become: true
+  roles:
+    - role: reporting-workspace
+
+- name: Personalise the instructor console
+  hosts: instructor-console
+  become: true
+  roles:
+    - role: instructor-console
+
+- name: Stage trainee lab resources
+  hosts: trainee-workstation-01, trainee-workstation-02
+  roles:
+    - role: trainee-workstation

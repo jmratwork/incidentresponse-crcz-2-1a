@@ -1,0 +1,26 @@
+---
+ng_siem_pipeline_config: /etc/ng-siem/pipelines.d/rep.conf
+ng_siem_pipeline:
+  name: rep_ingest
+  sources:
+    - name: telemetry_feeder
+      type: tcp
+      listen: 0.0.0.0:5514
+    - name: cti_taxii
+      type: taxii
+      url: https://cti-ss.internal/taxii/
+      collection: rep-threats
+      username: siem-ingestor
+      password: changeme
+  enrichments:
+    - type: geoip
+      database: /usr/share/GeoIP/GeoLite2-City.mmdb
+    - type: threat_lookup
+      table: rep-threats
+  outputs:
+    - type: elasticsearch
+      hosts:
+        - https://es-gateway.internal:9200
+      index: rep-alerts-{{ '%Y.%m.%d' | strftime }}
+ng_siem_healthcheck:
+  command: "/usr/bin/ng-siemctl pipeline status rep_ingest"

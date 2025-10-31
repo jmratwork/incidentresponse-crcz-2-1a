@@ -1,0 +1,37 @@
+---
+- name: Ensure ng-soc system group exists
+  ansible.builtin.group:
+    name: ng-soc
+    system: true
+
+- name: Ensure ng-soc configuration directory exists
+  ansible.builtin.file:
+    path: "{{ ng_soc_dashboard_config | dirname }}"
+    state: directory
+    owner: root
+    group: ng-soc
+    mode: "0750"
+
+- name: Deploy ng-soc dashboard configuration
+  ansible.builtin.template:
+    src: dashboard.yaml.j2
+    dest: "{{ ng_soc_dashboard_config }}"
+    owner: root
+    group: ng-soc
+    mode: "0640"
+  notify: reload ng-soc dashboard
+
+- name: Validate ng-soc configuration
+  ansible.builtin.command: "ng-socctl validate --config {{ ng_soc_dashboard_config }}"
+  register: ng_soc_validate
+  changed_when: false
+  failed_when: ng_soc_validate.rc != 0
+
+- name: Check ng-soc API status
+  ansible.builtin.uri:
+    url: "{{ ng_soc_healthcheck.url }}"
+    method: GET
+    status_code: {{ ng_soc_healthcheck.status_code | int }}
+  register: ng_soc_health
+  failed_when: ng_soc_health.status != ng_soc_healthcheck.status_code
+  changed_when: false

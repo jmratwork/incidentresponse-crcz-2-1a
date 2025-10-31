@@ -1,0 +1,23 @@
+queues:
+{% for queue in ng_soar_queues %}
+  - name: {{ queue.name }}
+    type: {{ queue.type }}
+    durable: {{ 'true' if queue.durable else 'false' }}
+    prefetch: {{ queue.prefetch }}
+{% endfor %}
+
+integrations:
+{% for integration in ng_soar_integrations %}
+  - name: {{ integration.name }}
+    type: {{ integration.type }}
+{% for key, value in integration.items() if key not in ['name', 'type'] %}
+{% if value is iterable and value is not string %}
+    {{ key }}:
+{% for item in value %}
+      - {{ item }}
+{% endfor %}
+{% else %}
+    {{ key }}: {{ value }}
+{% endif %}
+{% endfor %}
+{% endfor %}

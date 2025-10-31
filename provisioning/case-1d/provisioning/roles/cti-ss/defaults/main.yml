@@ -1,0 +1,19 @@
+---
+cti_ss_taxii_config: /etc/cti-ss/taxii.yaml
+cti_ss_taxii_collections:
+  - id: rep-threats
+    title: REP Threat Intelligence
+    description: Indicators collected during the REP exercise
+    can_read: ["ng-siem", "ng-soar"]
+    can_write: ["telemetry-feeder"]
+cti_ss_auth:
+  users:
+    - username: siem-ingestor
+      password: changeme
+      permissions: ["rep-threats:read"]
+    - username: telemetry-feeder
+      password: changeme
+      permissions: ["rep-threats:write"]
+cti_ss_bind_host: 0.0.0.0
+cti_ss_bind_port: 9000
+cti_ss_healthcheck_command: "/usr/bin/cti-ssctl status"

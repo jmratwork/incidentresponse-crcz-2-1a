@@ -1,0 +1,5 @@
+---
+- name: reload ng-siem pipelines
+  ansible.builtin.service:
+    name: ng-siem
+    state: reloaded

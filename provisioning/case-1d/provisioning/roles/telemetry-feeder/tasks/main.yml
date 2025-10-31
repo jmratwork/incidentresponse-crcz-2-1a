@@ -1,0 +1,37 @@
+- name: Ensure telemetry service group exists
+  ansible.builtin.group:
+    name: telemetry
+    system: true
+
+- name: Ensure telemetry feeder configuration directory exists
+  ansible.builtin.file:
+    path: "{{ telemetry_feeder_agent_config | dirname }}"
+    state: directory
+    owner: root
+    group: telemetry
+    mode: "0750"
+
+- name: Deploy telemetry feeder agent configuration
+  ansible.builtin.template:
+    src: agent.yaml.j2
+    dest: "{{ telemetry_feeder_agent_config }}"
+    owner: root
+    group: telemetry
+    mode: "0640"
+  notify: restart telemetry feeder
+  no_log: true
+
+- name: Validate telemetry feeder configuration
+  ansible.builtin.command: "telemetry-feederctl lint --config {{ telemetry_feeder_agent_config }}"
+  register: telemetry_feeder_lint
+  changed_when: false
+  failed_when: telemetry_feeder_lint.rc != 0
+
+- name: Check telemetry feeder health endpoint
+  ansible.builtin.uri:
+    url: "{{ telemetry_feeder_healthcheck_url }}"
+    method: GET
+    status_code: 200
+  register: telemetry_feeder_health
+  failed_when: telemetry_feeder_health.status != 200
+  changed_when: false

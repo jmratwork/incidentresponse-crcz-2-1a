@@ -1,0 +1,5 @@
+---
+- name: reload ng-soc dashboard
+  ansible.builtin.service:
+    name: ng-soc
+    state: reloaded

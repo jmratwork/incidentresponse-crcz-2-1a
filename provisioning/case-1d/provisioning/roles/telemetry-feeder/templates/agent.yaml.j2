@@ -1,0 +1,19 @@
+buffers:
+  size_mb: {{ telemetry_feeder_agent.buffers.size_mb }}
+  flush_interval: {{ telemetry_feeder_agent.buffers.flush_interval }}
+
+transforms:
+{% for transform in telemetry_feeder_agent.transforms %}
+  - name: {{ transform.name }}
+    type: {{ transform.type }}
+    pattern: "{{ transform.pattern }}"
+    replacement: "{{ transform.replacement }}"
+{% endfor %}
+
+outputs:
+{% for output in telemetry_feeder_agent.outputs %}
+  - type: {{ output.type }}
+{% for key, value in output.items() if key != 'type' %}
+    {{ key }}: {{ value | to_json }}
+{% endfor %}
+{% endfor %}

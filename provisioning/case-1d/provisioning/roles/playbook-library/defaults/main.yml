@@ -1,0 +1,19 @@
+---
+playbook_library_root: /srv/playbooks
+playbook_library_metadata: /srv/playbooks/index.json
+playbook_library_playbooks:
+  - id: contain-phishing
+    name: Contain phishing infrastructure
+    cacao_version: 1.1
+    enabled: true
+    triggers:
+      - indicator: url
+        pattern: "phishing"
+  - id: reset-credentials
+    name: Force credential reset
+    cacao_version: 1.1
+    enabled: false
+    triggers:
+      - indicator: user
+        pattern: "compromised"
+playbook_library_healthcheck_command: "/usr/bin/cacaoctl validate --path /srv/playbooks"

@@ -1,0 +1,38 @@
+pipeline {{ ng_siem_pipeline.name }} {
+  {% for source in ng_siem_pipeline.sources %}
+  source {{ source.name }} {
+    type => {{ source.type }}
+{% if source.listen is defined %}    listen => {{ source.listen }}
+{% endif %}{% if source.url is defined %}    url => "{{ source.url }}"
+{% endif %}{% if source.collection is defined %}    collection => "{{ source.collection }}"
+{% endif %}{% if source.username is defined %}    username => "{{ source.username }}"
+{% endif %}{% if source.password is defined %}    password => "{{ source.password }}"
+{% endif %}  }
+  {% endfor %}
+
+  {% for enrichment in ng_siem_pipeline.enrichments %}
+  enrichment {{ enrichment.type }} {
+{% for key, value in enrichment.items() if key != 'type' %}
+    {{ key }} => {{ value | to_json }}
+{% endfor %}
+  }
+  {% endfor %}
+
+  output {
+{% for output in ng_siem_pipeline.outputs %}
+    {{ output.type }} {
+{% for key, value in output.items() if key != 'type' %}
+{% if value is iterable and value is not string %}
+      {{ key }} => [
+{% for item in value %}
+        {{ item | to_json }}
+{% endfor %}
+      ]
+{% else %}
+      {{ key }} => {{ value | to_json }}
+{% endif %}
+{% endfor %}
+    }
+{% endfor %}
+  }
+}

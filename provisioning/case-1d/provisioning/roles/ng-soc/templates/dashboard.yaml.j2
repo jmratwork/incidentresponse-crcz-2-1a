@@ -1,0 +1,14 @@
+widgets:
+{% for widget in ng_soc_widgets %}
+  - id: {{ widget.id }}
+    title: {{ widget.title }}
+    datasource: {{ widget.datasource }}
+    query: {{ widget.query }}
+{% endfor %}
+
+alert_routes:
+{% for route in ng_soc_alert_routes %}
+  - name: {{ route.name }}
+    severity: {{ route.severity }}
+    destination: {{ route.destination }}
+{% endfor %}
