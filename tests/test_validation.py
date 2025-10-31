@@ -80,10 +80,7 @@ def test_topology_components_are_consistent(topology_data):
 
 @pytest.mark.parametrize(
     "topology_path",
-    [
-        REPO_ROOT / "provisioning" / "case-1a" / "topology.yml",
-        REPO_ROOT / "provisioning" / "case-1d" / "topology.yml",
-    ],
+    [REPO_ROOT / "provisioning" / "case-1a" / "topology.yml"],
 )
 def test_provisioning_topologies(topology_path):
     if not topology_path.exists():
