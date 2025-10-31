@@ -1,4 +1,15 @@
----
+- name: Install Grafana package
+  ansible.builtin.package:
+    name: "{{ reporting_workspace_grafana_package }}"
+    state: present
+
+- name: Ensure Grafana service is enabled and started
+  ansible.builtin.service:
+    name: "{{ reporting_workspace_grafana_service }}"
+    enabled: true
+    state: started
+  notify: restart grafana
+
 - name: Ensure grafana group exists
   ansible.builtin.group:
     name: grafana
@@ -71,6 +82,16 @@
   loop_control:
     loop_var: dashboard
   notify: restart grafana
+
+- name: Wait for Grafana service port to become available
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 3000
+    timeout: 30
+    sleep: 1
+  when:
+    - reporting_workspace_healthcheck is defined
+    - reporting_workspace_healthcheck.url | length > 0
 
 #- name: Validate Grafana is responding
 #  ansible.builtin.uri:
