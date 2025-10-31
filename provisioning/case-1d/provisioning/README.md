@@ -17,7 +17,7 @@ Automation assets for the NG-SOC ecosystem used during the playbook execution ex
 ## Requirements
 
 - Ansible 2.15 or newer with the `community.general` collection available. Install the `pywinrm` Python package for WinRM connectivity when managing Windows hosts from the same control node (use `pywinrm[credssp]` where CredSSP is needed).
-- Access to the hosts defined in `provisioning/subcase-1d-topology.yml`.
+- Access to the hosts defined in `provisioning/case-1d/topology.yml`.
 - Secrets managed through Ansible Vault or environment variables.
 
 Install the collection with:
@@ -29,7 +29,7 @@ ansible-galaxy collection install community.general
 ## Running the playbook
 
 ```bash
-ansible-playbook -i inventory.ini provisioning/subcase-1d/site.yml
+ansible-playbook -i inventory.ini provisioning/case-1d/provisioning/playbook.yml
 ```
 
 Use tags to execute individual components, e.g. `--tags ng_siem` to provision only the SIEM server.
