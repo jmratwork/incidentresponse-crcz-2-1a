@@ -1,19 +1,15 @@
-# Provisioning workflow for subcases 1a and 1d
+# Provisioning workflow for subcase 1a
 
 This guide explains how to instantiate the CyberRangeCZ infrastructure aligned with the CYNET activity diagram. The process is divided into two phases: importing the KYPO/CRCZ topology and configuring the virtual machines with Ansible.
 
 ## 1. Import the topology in KYPO/CRCZ
 
 1. Sign in to the KYPO portal with an account that can create sandboxes.
-2. For subcase **1a**, upload `provisioning/case-1a/topology.yml`. The topology creates:
+2. Upload `provisioning/case-1a/topology.yml`. The topology creates:
    - REP backend servers (`rep-scheduler`, `rep-live-session`, `rep-quiz-engine`, `rep-practical-labs`).
    - Instructor and trainee workstations connected to the `rep-frontend` network.
    - The `reporting-workspace` node on the analytics segment.
-3. For subcase **1d**, upload `provisioning/case-1d/topology.yml` to provision:
-   - Core NG-SOC hosts (`ng-soc`, `ng-siem`, `ng-soar`).
-   - Supporting services (`cti-ss`, `cicms-operator`, `playbook-library`, `telemetry-simulator`).
-   - Segmented networks that emulate the SOC, automation, intelligence, coordination and telemetry zones.
-4. Deploy the sandbox and wait for KYPO/CRCZ to report that all machines are reachable.
+3. Deploy the sandbox and wait for KYPO/CRCZ to report that all machines are reachable.
 
 ## 2. Prepare credentials
 
@@ -23,7 +19,6 @@ This guide explains how to instantiate the CyberRangeCZ infrastructure aligned w
 
 ```bash
 export ANSIBLE_PASSWORD_REP_SCHEDULER='********'
-export ANSIBLE_PASSWORD_NG_SOC='********'
 ```
 
 4. If you prefer to store secrets in Ansible Vault files, replace the `lookup('env', ...)` expressions with `ansible-vault` variables and reference the vault when running the playbooks.
@@ -40,8 +35,6 @@ ansible-galaxy collection install ansible.windows community.general
 - Windows connectivity for trainee machines requires WinRM over TLS (port 5986). Configure certificates or use the inventory option `ansible_winrm_server_cert_validation=ignore` for lab environments.
 
 ## 4. Execute the playbooks
-
-### Subcase 1a
 
 ```bash
 ansible-playbook -i inventory.ini provisioning/playbook.yml
@@ -61,24 +54,10 @@ Use the helper scripts in `provisioning/case-1a/scripts/` to exercise REP servic
   require a bearer token supplied in `REP_API_TOKEN`. Set `REP_REPORTING_EXPORT_PATH` when the Reporting Workspace exposes a
   custom path.
 
-### Subcase 1d
-
-```bash
-ansible-playbook -i inventory.ini provisioning/case-1d/provisioning/playbook.yml
-```
-
-This playbook configures the NG ecosystem by installing packages, enabling services and seeding working directories that match the operational flow described in the NG-SOC documentation.
-
-Use tags (e.g. `--tags ng_soar`) to target specific components during troubleshooting.
-
-NG-SOC automation utilities (`create_playbook.sh`, `update_playbook.sh`, `share_playbook.sh` and their mocks) continue to live in
-`provisioning/case-1d/scripts/` for the subcase 1d exercises.
-
 ## 5. Validation steps
 
 - Check SSH or WinRM connectivity with `ansible all -i inventory.ini -m ping` (use `ansible.windows.win_ping` for Windows groups).
-- Verify that key services are running (`nginx` on the playbook library, `redis-server` on NG-SOAR, `grafana-server` on the reporting workspace).
-- Trigger the telemetry simulator script (`/opt/telemetry-simulator/scenarios/generate.sh`) and confirm that NG-SIEM receives events through `rsyslog`.
+- Verify that key services are running (`nginx` on the REP backend, quiz engine workers and the Grafana service on the reporting workspace).
 - Confirm that trainees can access the `WELCOME.txt` note in `C:\Labs` and that the instructor console has the `rep-notes` workspace.
 
-Following these steps ensures the infrastructure mirrors the flows of subcases 1a and 1d and is ready for the exercises described in `docs/subcase-1a-phishing-awareness.md` and `docs/subcase-1d-playbook-automation.md`.
+Following these steps ensures the infrastructure mirrors the flow of subcase 1a and is ready for the exercises described in `docs/subcase-1a-phishing-awareness.md`.
