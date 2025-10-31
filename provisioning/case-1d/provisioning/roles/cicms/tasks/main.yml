@@ -67,8 +67,8 @@
   ansible.builtin.uri:
     url: "{{ cicms_healthcheck.url }}"
     method: GET
-    status_code: {{ cicms_healthcheck.status_code | int }}
-    validate_certs: {{ cicms_healthcheck.validate_certs | bool }}
+    status_code: "{{ cicms_healthcheck.status_code | int }}"
+    validate_certs: "{{ cicms_healthcheck.validate_certs | bool }}"
   register: cicms_health
   failed_when: cicms_health.status != cicms_healthcheck.status_code
   changed_when: false

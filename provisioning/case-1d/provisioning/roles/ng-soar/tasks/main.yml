@@ -38,7 +38,7 @@
   ansible.builtin.uri:
     url: "{{ ng_soar_healthcheck.url }}"
     method: GET
-    status_code: {{ ng_soar_healthcheck.status_code | int }}
+    status_code: "{{ ng_soar_healthcheck.status_code | int }}"
   register: ng_soar_health
   failed_when: ng_soar_health.status != ng_soar_healthcheck.status_code
   changed_when: false
