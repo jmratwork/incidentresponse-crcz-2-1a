@@ -27,3 +27,5 @@ rep_core_healthcheck:
   url: https://127.0.0.1/healthz
   status_code: 200
   validate_certs: false
+rep_core_nginx_package: nginx
+rep_core_nginx_service: nginx
