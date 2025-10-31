@@ -53,6 +53,14 @@ The playbook:
 - Customises the instructor console.
 - Creates working folders for trainee machines.
 
+Use the helper scripts in `provisioning/case-1a/scripts/` to exercise REP services during dry runs:
+
+- `schedule_rep_lab.sh` posts a JSON payload (for example `examples/lab-schedule.json`) to the Scheduler endpoint defined by
+  `REP_SCHEDULER_API_BASE` (and optionally `REP_SCHEDULER_SCHEDULE_PATH`).
+- `export_quiz_report.sh` downloads quiz analytics from the Reporting Workspace using `REP_REPORTING_API_BASE`; both scripts
+  require a bearer token supplied in `REP_API_TOKEN`. Set `REP_REPORTING_EXPORT_PATH` when the Reporting Workspace exposes a
+  custom path.
+
 ### Subcase 1d
 
 ```bash
@@ -62,6 +70,9 @@ ansible-playbook -i inventory.ini provisioning/case-1d/provisioning/playbook.yml
 This playbook configures the NG ecosystem by installing packages, enabling services and seeding working directories that match the operational flow described in the NG-SOC documentation.
 
 Use tags (e.g. `--tags ng_soar`) to target specific components during troubleshooting.
+
+NG-SOC automation utilities (`create_playbook.sh`, `update_playbook.sh`, `share_playbook.sh` and their mocks) continue to live in
+`provisioning/case-1d/scripts/` for the subcase 1d exercises.
 
 ## 5. Validation steps
 
