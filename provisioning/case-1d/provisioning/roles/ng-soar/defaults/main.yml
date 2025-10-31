@@ -9,17 +9,21 @@ ng_soar_queues:
     type: rabbitmq
     durable: true
     prefetch: 5
+
+ng_soar_siem_endpoint: https://ng-siem.internal/api/playbooks
+ng_soar_siem_token: "{{ lookup('ansible.builtin.vars', 'vault_ng_soar_siem_token', default='') }}"
 ng_soar_integrations:
   - name: siem_ingest
     type: rest
-    endpoint: https://ng-siem.internal/api/playbooks
-    token: changeme
+    endpoint: "{{ ng_soar_siem_endpoint }}"
+    token: "{{ ng_soar_siem_token }}"
   - name: cacao_broker
     type: kafka
     brokers:
       - kafka1.internal:9092
       - kafka2.internal:9092
     topic: cacao.playbooks
+
 ng_soar_healthcheck:
   url: http://127.0.0.1:8080/healthz
   status_code: 200

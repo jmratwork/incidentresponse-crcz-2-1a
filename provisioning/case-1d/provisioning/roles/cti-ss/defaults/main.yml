@@ -7,13 +7,7 @@ cti_ss_taxii_collections:
     can_read: ["ng-siem", "ng-soar"]
     can_write: ["telemetry-feeder"]
 cti_ss_auth:
-  users:
-    - username: siem-ingestor
-      password: changeme
-      permissions: ["rep-threats:read"]
-    - username: telemetry-feeder
-      password: changeme
-      permissions: ["rep-threats:write"]
+  users: {{ lookup('ansible.builtin.vars', 'vault_cti_ss_auth_users', default=[]) | to_json | from_json }}
 cti_ss_bind_host: 0.0.0.0
 cti_ss_bind_port: 9000
 cti_ss_healthcheck_command: "/usr/bin/cti-ssctl status"
