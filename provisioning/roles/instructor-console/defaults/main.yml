@@ -9,7 +9,7 @@ instructor_console_shortcuts:
   - name: launch_quiz_dashboard
     command: "firefox https://rep-core.internal/quiz"
   - name: open_ticket_queue
-    command: "ssh soc-queue"
+    command: "ssh ng-soc"
 instructor_console_tmux_settings:
   mouse_mode: true
   history_limit: 10000
