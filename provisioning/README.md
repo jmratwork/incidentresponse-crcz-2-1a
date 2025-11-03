@@ -51,6 +51,7 @@ ansible-playbook -i inventory.ini provisioning/playbook.yml
 - **Service:** prepares the instructor's terminal with predefined `tmux` sessions and shell shortcuts to the critical services.
 - **Configuration:** `tmux.conf.j2` and `instructor-console.sh.j2` translate `instructor_console_tmux_settings` and `instructor_console_shortcuts` into files in `$HOME` and `/etc/profile.d`.
 - **Key variables:** `instructor_console_user`, `instructor_console_workspace`, `instructor_console_tmux_settings` and `instructor_console_shortcuts`.
+- **Default shortcuts:** `launch_scheduler` (`ssh rep-scheduler`), `launch_quiz_dashboard` (Firefox to the quiz dashboard) and `open_ticket_queue` (`ssh ng-soc` to reach the SOC ticket queue host defined in `inventory.sample`).
 - **Validation:** the role runs `tmux -f … display-message` and a `bash -lc` command to verify that the shortcuts are registered as functions.
 
 ### `trainee_workstation`
