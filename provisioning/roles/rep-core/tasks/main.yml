@@ -1,3 +1,11 @@
+- name: Refresh apt cache on Ubuntu hosts
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when:
+    - ansible_os_family == "Debian"
+    - ansible_distribution == "Ubuntu"
+
 - name: Ensure nginx package is installed
   ansible.builtin.package:
     name: "{{ rep_core_nginx_package }}"
