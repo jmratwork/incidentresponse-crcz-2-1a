@@ -123,6 +123,32 @@ def load_yaml(relative_path):
         return yaml.safe_load(f)
 
 
+def test_instructor_console_shortcut_validation_handles_empty_list():
+    tasks = load_yaml("provisioning/roles/instructor-console/tasks/main.yml")
+    matching = [
+        task
+        for task in tasks
+        if task.get("name") == "Verify instructor console shortcuts are executable"
+    ]
+
+    assert matching, "Expected instructor console shortcut validation task to exist"
+
+    task = matching[0]
+
+    assert task.get("when") == "instructor_console_shortcuts | length > 0"
+    assert task.get("loop") == "{{ instructor_console_shortcuts }}"
+
+    command = task.get("ansible.builtin.command")
+    assert isinstance(command, str) and "item.name" in command
+
+    loop_control = task.get("loop_control", {})
+    assert loop_control.get("label") == "{{ item.name | upper }}"
+
+    failed_when = task.get("failed_when")
+    assert isinstance(failed_when, str)
+    assert "select('ne', 'function')" in failed_when
+
+
 def test_reporting_workspace_healthcheck_defaults_expose_fallbacks():
     defaults = load_yaml("provisioning/roles/reporting-workspace/defaults/main.yml")
     healthcheck = defaults["reporting_workspace_healthcheck"]
