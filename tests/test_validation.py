@@ -159,6 +159,25 @@ def test_reporting_workspace_healthcheck_defaults_expose_fallbacks():
     assert healthcheck["failed_when_non_json"].strip()
 
 
+def test_reporting_workspace_repo_defaults_include_grafana_oss():
+    defaults = load_yaml("provisioning/roles/reporting-workspace/defaults/main.yml")
+    repositories = defaults["reporting_workspace_grafana_repositories"]
+
+    assert isinstance(repositories, list) and repositories, "Repository defaults should include Grafana OSS"
+
+    grafana_repo = repositories[0]
+    assert grafana_repo["name"] == "grafana_oss"
+
+    apt_key = grafana_repo["apt_key"]
+    assert apt_key["url"].endswith("/gpg.key")
+    assert apt_key["keyring"].endswith("/grafana.gpg")
+
+    apt_repository = grafana_repo["apt_repository"]
+    assert "apt.grafana.com" in apt_repository["repo"]
+    assert "signed-by" in apt_repository["repo"]
+    assert apt_repository["update_cache"] is True
+
+
 def test_reporting_workspace_health_task_handles_non_json_payloads():
     tasks = load_yaml("provisioning/roles/reporting-workspace/tasks/main.yml")
     health_tasks = [task for task in tasks if task.get("name") == "Validate Grafana is responding"]
@@ -175,3 +194,28 @@ def test_reporting_workspace_health_task_handles_non_json_payloads():
     assert "reporting_workspace_health.json is not defined" in failed_when[0]
     assert "failed_when_non_json" in failed_when[0]
     assert "reporting_workspace_health.json is defined" in failed_when[1]
+
+
+def test_reporting_workspace_repo_setup_precedes_package_install():
+    tasks = load_yaml("provisioning/roles/reporting-workspace/tasks/main.yml")
+
+    repo_tasks = [
+        (index, task)
+        for index, task in enumerate(tasks)
+        if task.get("name") == "Configure Grafana repositories"
+    ]
+
+    assert repo_tasks, "Repository configuration task should be defined"
+
+    repo_index, repo_task = repo_tasks[0]
+    install_index = next(
+        index for index, task in enumerate(tasks) if task.get("name") == "Install Grafana package"
+    )
+
+    assert repo_index < install_index, "Repository configuration must run before package installation"
+    assert repo_task.get("loop") == "{{ reporting_workspace_grafana_repositories }}"
+
+    block = repo_task.get("block", [])
+    assert any("ansible.builtin.apt_repository" in step for step in block), (
+        "Repository block should configure package repositories"
+    )
