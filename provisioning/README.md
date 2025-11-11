@@ -44,7 +44,7 @@ ansible-playbook -i inventory.ini provisioning/playbook.yml
 ### `reporting_workspace`
 - **Service:** provisions Grafana with PostgreSQL data sources and dashboards to monitor the exercise.
 - **Configuration:** the `grafana.ini.j2`, `datasources.yaml.j2`, `dashboards.yaml.j2` and `dashboard.json.j2` templates generate the Grafana configuration and the dashboards listed in `reporting_workspace_dashboards`.
-- **Key variables:** `reporting_workspace_datasources`, `reporting_workspace_dashboards`, `reporting_workspace_grafana_ini` and `reporting_workspace_healthcheck` allow you to parameterise ports, dashboards and checks.
+- **Key variables:** `reporting_workspace_datasources`, `reporting_workspace_dashboards`, `reporting_workspace_grafana_ini`, `reporting_workspace_grafana_repositories` and `reporting_workspace_healthcheck` allow you to parameterise ports, repositories, dashboards and checks.
 - **Validation:** after applying the templates the role issues a `GET {{ reporting_workspace_healthcheck.url }}` request and expects `database == 'ok'`.
 
 ### `instructor_console`
