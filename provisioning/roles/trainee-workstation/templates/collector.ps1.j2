@@ -1,0 +1,36 @@
+$ErrorActionPreference = 'Stop'
+
+$configPath = "{{ trainee_workstation_collector.config_path }}"
+$logPath = "{{ trainee_workstation_collector.log_path }}"
+$logDirectory = Split-Path -Path $logPath -Parent
+
+if (-not (Test-Path -Path $logDirectory)) {
+    New-Item -Path $logDirectory -ItemType Directory -Force | Out-Null
+}
+
+$configContent = $null
+if (Test-Path -Path $configPath) {
+    try {
+        $configContent = Get-Content -Path $configPath -Raw
+    } catch {
+        Write-Warning "Failed to read configuration file at $configPath: $($_.Exception.Message)"
+    }
+}
+
+if (-not (Test-Path -Path $logPath)) {
+    New-Item -Path $logPath -ItemType File -Force | Out-Null
+}
+
+if ($configContent) {
+    $startupMessage = "[$(Get-Date -Format o)] Loaded collector configuration (${($configContent.Length)} characters)."
+} else {
+    $startupMessage = "[$(Get-Date -Format o)] Collector configuration not found or empty."
+}
+Add-Content -Path $logPath -Value $startupMessage
+
+while ($true) {
+    $timestamp = Get-Date -Format o
+    $heartbeat = "[$timestamp] Collector heartbeat"
+    Add-Content -Path $logPath -Value $heartbeat
+    Start-Sleep -Seconds 60
+}
