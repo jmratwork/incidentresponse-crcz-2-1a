@@ -11,9 +11,9 @@
     state: directory
   when: ansible_facts.os_family | default('') == 'Windows'
 
-- name: Ensure collector executable directory exists
+- name: Ensure collector script directory exists
   ansible.windows.win_file:
-    path: "{{ trainee_workstation_collector.executable_path | regex_replace('\\\\[^\\\\]+$', '') }}"
+    path: "{{ trainee_workstation_collector.script_path | regex_replace('\\\\[^\\\\]+$', '') }}"
     state: directory
   when: ansible_facts.os_family | default('') == 'Windows'
 
@@ -31,11 +31,12 @@
   notify: restart rep collector
   no_log: true
 
-- name: Deploy collector executable
-  ansible.windows.win_copy:
-    src: collector.exe
-    dest: "{{ trainee_workstation_collector.executable_path }}"
+- name: Deploy collector PowerShell script
+  ansible.windows.win_template:
+    src: collector.ps1.j2
+    dest: "{{ trainee_workstation_collector.script_path }}"
   when: ansible_facts.os_family | default('') == 'Windows'
+  notify: restart rep collector
 
 - name: Publish trainee shortcuts
   ansible.windows.win_template:
@@ -49,7 +50,9 @@
 - name: Ensure collector service is running
   ansible.windows.win_service:
     name: "{{ trainee_workstation_collector.service_name }}"
-    path: "{{ trainee_workstation_collector.executable_path }}"
+    path: "{{ trainee_workstation_collector.service_binary }}"
+    arguments: "{{ trainee_workstation_collector.service_args }}"
+    start_mode: auto
     state: started
   when: ansible_facts.os_family | default('') == 'Windows'
 
