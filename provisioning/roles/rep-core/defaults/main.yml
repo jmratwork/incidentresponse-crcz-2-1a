@@ -1,4 +1,9 @@
-rep_core_tls_enabled: true
+# TLS is disabled by default because the lab images do not ship with
+# certificates. Enabling TLS without providing certificate/key content
+# causes nginx to fail to reload, so the defaults favour a working HTTP
+# deployment. Operators can still enable TLS by overriding this variable
+# and supplying the required files or contents.
+rep_core_tls_enabled: false
 
 rep_core_virtual_host:
   listen: "{{ 443 if rep_core_tls_enabled else 80 }}"
