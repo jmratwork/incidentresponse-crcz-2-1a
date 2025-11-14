@@ -93,6 +93,13 @@
   when: rep_core_shared_secret | length > 0
   no_log: true
 
+- name: Flush pending handler notifications
+  ansible.builtin.meta: flush_handlers
+  when:
+    - rep_core_healthcheck is defined
+    - rep_core_healthcheck.url | length > 0
+    - rep_core_tls_enabled | bool
+
 - name: Wait for nginx service to become available
   ansible.builtin.wait_for:
     host: 127.0.0.1
