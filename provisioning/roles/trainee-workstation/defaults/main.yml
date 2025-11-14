@@ -1,9 +1,11 @@
 ---
+trainee_workstation_collector_script_path: C:\\ProgramData\\REP\\collector.ps1
+
 trainee_workstation_collector:
   service_name: REPCollector
-  script_path: C:\\ProgramData\\REP\\collector.ps1
+  script_path: "{{ trainee_workstation_collector_script_path }}"
   service_binary: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe
-  service_args: -NoProfile -ExecutionPolicy Bypass -File "{{ trainee_workstation_collector.script_path }}"
+  service_args: -NoProfile -ExecutionPolicy Bypass -File "{{ trainee_workstation_collector_script_path }}"
   config_path: C:\\ProgramData\\REP\\collector.yaml
   log_path: C:\\ProgramData\\REP\\collector.log
   directory: C:\\ProgramData\\REP
