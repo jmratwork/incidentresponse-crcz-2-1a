@@ -39,6 +39,8 @@
 - name: Validate tmux configuration
   ansible.builtin.command:
     cmd: "bash -lc 'tmux -f {{ instructor_console_tmux_conf }} -L ansible-test start-server \\; list-keys \\; kill-server'"
+  environment:
+    TERM: xterm-256color
   register: instructor_console_tmux_validation
   changed_when: false
   failed_when: instructor_console_tmux_validation.rc != 0
