@@ -120,27 +120,23 @@
   register: reporting_workspace_health
   failed_when:
     - >-
-      {{
-        (reporting_workspace_health.json is not defined)
-        | ternary(
-          reporting_workspace_healthcheck.failed_when_non_json
-          | default(
-            'Grafana health endpoint {} did not return JSON. Status: {}, Body: {}'
-            | format(
-              reporting_workspace_healthcheck.url,
-              reporting_workspace_health.status | default('unknown'),
-              reporting_workspace_health.content | default('') | truncate(200, True, '...')
-            ),
-            true
+      reporting_workspace_health.json is not defined
+      and (
+        reporting_workspace_healthcheck.failed_when_non_json
+        | default(
+          'Grafana health endpoint %s did not return JSON. Status: %s, Body: %s'
+          % (
+            reporting_workspace_healthcheck.url,
+            reporting_workspace_health.status | default('unknown'),
+            reporting_workspace_health.content | default('') | truncate(200, True, '...')
           ),
-          False
+          true
         )
-      }}
+        | bool
+      )
     - >-
-      {{
-        reporting_workspace_health.json is defined
-        and (reporting_workspace_health.json.database | default('')) != 'ok'
-      }}
+      reporting_workspace_health.json is defined
+      and (reporting_workspace_health.json.database | default('')) != 'ok'
   changed_when: false
   when:
     - reporting_workspace_healthcheck is defined
