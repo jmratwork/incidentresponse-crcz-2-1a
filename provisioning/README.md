@@ -37,9 +37,10 @@ ansible-playbook -i inventory.ini provisioning/playbook.yml
 
 ### `rep_core`
 - **Service:** publishes the REP platform behind Nginx with load balancing towards the `scheduler`, `live_session` and `quiz_engine` microservices.
-- **Configuration:** the `templates/nginx-rep-core.conf.j2` file renders the TLS virtual host and the upstreams defined in `defaults/main.yml` (`rep_core_virtual_host` and `rep_core_tls`). It also protects a shared secret stored in `rep_core_shared_secret_file`.
-- **Key variables:** `rep_core_virtual_host.*`, `rep_core_tls.*`, `rep_core_shared_secret` and `rep_core_healthcheck` describe routes, certificates and health checks.
-- **Validation:** `tasks/main.yml` runs `nginx -t` and an `ansible.builtin.uri` call to the `healthcheck_path`, raising an error if the HTTP code differs from the expected value.
+- **Configuration:** the `templates/nginx-rep-core.conf.j2` file renders the virtual host and the upstreams defined in `defaults/main.yml` (`rep_core_virtual_host` and `rep_core_tls`). It also protects a shared secret stored in `rep_core_shared_secret_file`.
+- **Key variables:** `rep_core_tls_enabled`, `rep_core_virtual_host.*`, `rep_core_tls.*`, `rep_core_shared_secret` and `rep_core_healthcheck` describe routes, certificates and health checks.
+- **TLS toggle:** set `rep_core_tls_enabled: true` and provide certificate/key material via `rep_core_tls.certificate_content` and `rep_core_tls.key_content` (or copy files out-of-band) to publish HTTPS on port 443. For lab or demo runs you can keep `rep_core_tls_enabled: false` to serve plain HTTP on port 80 and skip certificate distribution and HTTPS health checks.
+- **Validation:** `tasks/main.yml` runs `nginx -t` and, when TLS is enabled, an `ansible.builtin.uri` call to the `healthcheck_path`, raising an error if the HTTP code differs from the expected value.
 
 ### `reporting_workspace`
 - **Service:** provisions Grafana with PostgreSQL data sources and dashboards to monitor the exercise.

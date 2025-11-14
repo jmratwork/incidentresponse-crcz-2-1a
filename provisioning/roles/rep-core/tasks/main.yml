@@ -54,7 +54,9 @@
     owner: root
     group: root
     mode: "0640"
-  when: rep_core_tls.certificate_content | length > 0
+  when:
+    - rep_core_tls_enabled | bool
+    - rep_core_tls.certificate_content | length > 0
   notify: reload nginx
 
 - name: Install TLS private key for REP core
@@ -64,7 +66,9 @@
     owner: root
     group: root
     mode: "0600"
-  when: rep_core_tls.key_content | length > 0
+  when:
+    - rep_core_tls_enabled | bool
+    - rep_core_tls.key_content | length > 0
   notify: reload nginx
   no_log: true
 
@@ -98,6 +102,7 @@
   when:
     - rep_core_healthcheck is defined
     - rep_core_healthcheck.url | length > 0
+    - rep_core_tls_enabled | bool
 
 - name: Validate nginx configuration syntax
   ansible.builtin.command: nginx -t
@@ -117,3 +122,4 @@
   when:
     - rep_core_healthcheck is defined
     - rep_core_healthcheck.url | length > 0
+    - rep_core_tls_enabled | bool

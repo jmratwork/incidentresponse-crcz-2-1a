@@ -1,6 +1,7 @@
----
+rep_core_tls_enabled: true
+
 rep_core_virtual_host:
-  listen: 443
+  listen: "{{ 443 if rep_core_tls_enabled else 80 }}"
   server_name: rep-core.internal
   root: /srv/rep/current
   access_log: /var/log/nginx/rep_core_access.log
@@ -14,7 +15,7 @@ rep_core_virtual_host:
       server: 10.20.10.30:9003
   healthcheck_path: /healthz
   proxy_headers:
-    X-Forwarded-Proto: https
+    X-Forwarded-Proto: "{{ 'https' if rep_core_tls_enabled else 'http' }}"
     X-Request-ID: "$request_id"
 rep_core_tls:
   certificate_path: /etc/nginx/tls/rep_core.crt
@@ -24,7 +25,7 @@ rep_core_tls:
 rep_core_shared_secret_file: /etc/rep/credentials/api_shared_secret
 rep_core_shared_secret: ""
 rep_core_healthcheck:
-  url: https://127.0.0.1/healthz
+  url: "{{ (rep_core_tls_enabled | ternary('https', 'http')) }}://127.0.0.1/healthz"
   status_code: 200
   validate_certs: false
 rep_core_nginx_package: nginx
