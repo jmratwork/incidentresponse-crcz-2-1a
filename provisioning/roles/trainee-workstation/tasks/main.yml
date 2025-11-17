@@ -38,6 +38,20 @@
   when: ansible_facts.os_family | default('') == 'Windows'
   notify: restart rep collector
 
+- name: Download collector service wrapper
+  ansible.windows.win_get_url:
+    url: "{{ trainee_workstation_collector.service_wrapper.url }}"
+    dest: "{{ trainee_workstation_collector.service_wrapper.archive_path }}"
+    force: false
+  when: ansible_facts.os_family | default('') == 'Windows'
+
+- name: Extract collector service wrapper
+  ansible.windows.win_unzip:
+    src: "{{ trainee_workstation_collector.service_wrapper.archive_path }}"
+    dest: "{{ trainee_workstation_collector.service_wrapper.extract_path }}"
+    creates: "{{ trainee_workstation_collector.service_wrapper.exe_path }}"
+  when: ansible_facts.os_family | default('') == 'Windows'
+
 - name: Publish trainee shortcuts
   ansible.windows.win_template:
     src: shortcut.url.j2
@@ -48,9 +62,11 @@
   when: ansible_facts.os_family | default('') == 'Windows'
 
 - name: Ensure collector service is running
-  ansible.windows.win_service:
+  community.windows.win_nssm:
     name: "{{ trainee_workstation_collector.service_name }}"
-    path: "{{ trainee_workstation_collector.service_binary }} {{ trainee_workstation_collector.service_args }}"
+    application: "{{ trainee_workstation_collector.service_binary }}"
+    app_parameters: "{{ trainee_workstation_collector.service_args }}"
+    nssm_path: "{{ trainee_workstation_collector.service_wrapper.exe_path }}"
     start_mode: auto
     state: started
   when: ansible_facts.os_family | default('') == 'Windows'
