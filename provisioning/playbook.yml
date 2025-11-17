@@ -17,7 +17,17 @@
     - name: Parse ansible.windows collection metadata
       ansible.builtin.set_fact:
         ansible_windows_collections: >-
-          {{ (ansible_windows_collection.stdout | from_json).collections | default({}) }}
+          {{
+            ansible_windows_collection.stdout
+            | from_json
+            | dict2items
+            | selectattr('value', 'mapping')
+            | map(attribute='value')
+            | map('dict2items')
+            | flatten
+            | selectattr('key', 'equalto', 'ansible.windows')
+            | items2dict(key_name='key', value_name='value')
+          }}
 
     - name: Abort when ansible.windows collection is missing
       ansible.builtin.assert:
