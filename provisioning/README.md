@@ -17,11 +17,10 @@ The playbooks in this directory prepare the infrastructure required by the phish
 - Network reachability towards the hosts defined in `provisioning/case-1a/topology.yml`.
 - Credentials provided through Ansible Vault files or environment variables (see `inventory.sample`).
 
-Install the Ansible collections declared in `provisioning/collections.yml` with:
-
-```bash
-ansible-galaxy collection install -r provisioning/collections.yml
-```
+> **KYPO/CRCZ note:** running `ansible-playbook` directly is unsupported because the control node does not ship with the
+> required Ansible collections. Always execute `provisioning/run_playbook.sh`, which installs dependencies and launches the
+> playbook. If you must call `ansible-playbook` manually (e.g. for debugging), run
+> `ansible-galaxy collection install -r provisioning/collections.yml` first.
 
 ## Running the playbook
 
