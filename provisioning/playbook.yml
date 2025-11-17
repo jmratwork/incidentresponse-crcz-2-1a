@@ -1,5 +1,25 @@
 ---
 #Playbook for case 1a
+- name: Verify control node prerequisites
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Check for ansible.windows collection
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection list ansible.windows --format plain
+      register: ansible_windows_collection
+      changed_when: false
+      failed_when: ansible_windows_collection.rc != 0
+
+    - name: Abort when ansible.windows collection is missing
+      ansible.builtin.assert:
+        that:
+          - "'ansible.windows' in ansible_windows_collection.stdout"
+        fail_msg: >-
+          The ansible.windows collection is missing. Run provisioning/run_playbook.sh to
+          install required collections before executing this playbook directly.
+        success_msg: ansible.windows collection is available.
+
 - name: Configure REP core services
   hosts: rep-scheduler, rep-live-session, rep-quiz-engine, rep-practical-labs
   become: true

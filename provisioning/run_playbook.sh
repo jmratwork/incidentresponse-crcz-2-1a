@@ -17,6 +17,9 @@ COLLECTIONS_FILE="$SCRIPT_DIR/collections.yml"
 require_cmd ansible-galaxy
 require_cmd ansible-playbook
 
+echo "[run_playbook] Installing required collections and running provisioning/playbook.yml." >&2
+echo "[run_playbook] Use this wrapper instead of calling ansible-playbook directly on KYPO/CRCZ to avoid missing modules." >&2
+
 if [[ $# -gt 0 ]]; then
   INVENTORY="$1"
   shift
