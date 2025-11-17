@@ -46,7 +46,7 @@
   when: ansible_facts.os_family | default('') == 'Windows'
 
 - name: Extract collector service wrapper
-  ansible.windows.win_unzip:
+  community.windows.win_unzip:
     src: "{{ trainee_workstation_collector.service_wrapper.archive_path }}"
     dest: "{{ trainee_workstation_collector.service_wrapper.extract_path }}"
     creates: "{{ trainee_workstation_collector.service_wrapper.exe_path }}"
