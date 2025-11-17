@@ -52,6 +52,13 @@ The tests verify that:
 - `topology.yml` only references components defined within the document.
 - The KYPO topology in `provisioning/` references valid hosts, routers and networks in its mapping sections.
 
+## Binary assets and diagram contributions
+
+- Keep versioned binary assets to a minimum. Only instructional diagrams that are documented in `docs/figures/` should be committed; all other binaries should be supplied through external links or via Git LFS if your workflow allows it.
+- Preferred diagram formats are **PNG** and **SVG** generated from source files so they remain reproducible. Avoid uploading screenshots or raster captures—especially those containing sensitive environments—to git history.
+- If you need to share a one-off artifact (e.g., a capture or large archive), attach it through your collaboration platform instead of committing it to the repository.
+- A local pre-commit hook is provided to block accidental commits of disallowed binary extensions and to enforce that new PNG/SVG files live under `docs/figures/`. Install it with `pip install pre-commit` and run `pre-commit install` before committing changes.
+
 ## Credential management
 
 Before executing Ansible playbooks, replace the password placeholders in `inventory.sample` by referencing secrets stored in Ansible Vault files or exported through environment variables. This keeps sensitive credentials out of the repository while preserving a working inventory template for the exercises.

@@ -1,0 +1,27 @@
+repos:
+  - repo: local
+    hooks:
+      - id: forbid-disallowed-binaries
+        name: Prevent committing disallowed binary assets
+        language: system
+        entry: bash -c '
+          files="$(git diff --cached --name-only --diff-filter=A)" || exit 0;
+          fail=0;
+          disallowed=$(printf "%s\n" "$files" | grep -E "\.(bmp|gif|jpg|jpeg|tiff|ico|psd|ai|eps|raw|zip|7z|rar|tar|gz|tgz|bz2|xz|iso|exe|dll)$" || true);
+          if [ -n "$disallowed" ]; then
+            echo "Disallowed binary extensions detected:";
+            echo "$disallowed";
+            fail=1;
+          fi;
+          stray_diagrams=$(printf "%s\n" "$files" | grep -E "\.(png|svg)$" | grep -Ev "^docs/figures/" || true);
+          if [ -n "$stray_diagrams" ]; then
+            echo "PNG/SVG assets must be placed under docs/figures/:";
+            echo "$stray_diagrams";
+            fail=1;
+          fi;
+          if [ $fail -ne 0 ]; then
+            echo "Move diagrams to docs/figures/ and avoid committing other binaries.";
+          fi;
+          exit $fail
+        '
+        pass_filenames: false
