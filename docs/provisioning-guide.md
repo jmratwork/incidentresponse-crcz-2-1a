@@ -28,7 +28,7 @@ export ANSIBLE_PASSWORD_REP_SCHEDULER='********'
 ```bash
 python3 -m pip install --upgrade ansible
 python3 -m pip install pywinrm
-ansible-galaxy collection install ansible.windows community.general
+ansible-galaxy collection install -r provisioning/collections.yml
 ```
 
 - Install `pywinrm` to enable Ansible WinRM connectivity. Use `python3 -m pip install "pywinrm[credssp]"` when the sandbox requires CredSSP delegation support.
@@ -37,8 +37,10 @@ ansible-galaxy collection install ansible.windows community.general
 ## 4. Execute the playbooks
 
 ```bash
-ansible-playbook -i inventory.ini provisioning/playbook.yml
+provisioning/run_playbook.sh inventory.ini
 ```
+
+The wrapper installs the collections declared in `provisioning/collections.yml` (including `ansible.windows` and `community.general`) before running `provisioning/playbook.yml`, which prevents missing Windows modules on KYPO/CRCZ sandboxes.
 
 The playbook:
 - Installs web and application dependencies on the REP backend servers.

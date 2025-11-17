@@ -13,14 +13,14 @@ The playbooks in this directory prepare the infrastructure required by the phish
 
 ## Requirements
 
-- Ansible 2.15 or newer with the `ansible.windows` and `community.general` collections installed, plus the `pywinrm` Python package for WinRM connectivity (use `pywinrm[credssp]` when the scenario requires CredSSP).
+- Ansible 2.15 or newer plus the `pywinrm` Python package for WinRM connectivity (use `pywinrm[credssp]` when the scenario requires CredSSP).
 - Network reachability towards the hosts defined in `provisioning/case-1a/topology.yml`.
 - Credentials provided through Ansible Vault files or environment variables (see `inventory.sample`).
 
-Install the collections with:
+Install the Ansible collections declared in `provisioning/collections.yml` with:
 
 ```bash
-ansible-galaxy collection install ansible.windows community.general
+ansible-galaxy collection install -r provisioning/collections.yml
 ```
 
 ## Running the playbook
@@ -30,8 +30,10 @@ ansible-galaxy collection install ansible.windows community.general
 3. Execute the site playbook:
 
 ```bash
-ansible-playbook -i inventory.ini provisioning/playbook.yml
+provisioning/run_playbook.sh inventory.ini
 ```
+
+The wrapper installs `ansible.windows` and `community.general` from `provisioning/collections.yml` before running `provisioning/playbook.yml`, ensuring the Windows modules resolve correctly on KYPO/CRCZ environments.
 
 ## Role functional requirements
 
