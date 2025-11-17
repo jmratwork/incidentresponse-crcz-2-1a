@@ -6,15 +6,26 @@
   tasks:
     - name: Check for ansible.windows collection
       ansible.builtin.command:
-        cmd: ansible-galaxy collection list ansible.windows --format plain
+        # --format json is supported on ansible-core 2.13+. If unavailable, run
+        # provisioning/run_playbook.sh to install required collections with a
+        # compatible Ansible version.
+        cmd: ansible-galaxy collection list ansible.windows --format json
       register: ansible_windows_collection
       changed_when: false
       failed_when: ansible_windows_collection.rc != 0
 
+    - name: Parse ansible.windows collection metadata
+      ansible.builtin.set_fact:
+        ansible_windows_collections: >-
+          {{ (ansible_windows_collection.stdout | from_json).collections | default({}) }}
+
     - name: Abort when ansible.windows collection is missing
       ansible.builtin.assert:
         that:
-          - "'ansible.windows' in ansible_windows_collection.stdout"
+          - >-
+            ansible_windows_collections | dict2items |
+            selectattr('key', 'equalto', 'ansible.windows') |
+            list | length > 0
         fail_msg: >-
           The ansible.windows collection is missing. Run provisioning/run_playbook.sh to
           install required collections before executing this playbook directly.
