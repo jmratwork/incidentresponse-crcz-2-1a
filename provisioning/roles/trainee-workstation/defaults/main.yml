@@ -6,6 +6,11 @@ trainee_workstation_collector:
   script_path: "{{ trainee_workstation_collector_script_path }}"
   service_binary: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe
   service_args: -NoProfile -ExecutionPolicy Bypass -File "{{ trainee_workstation_collector_script_path }}"
+  service_wrapper:
+    url: https://nssm.cc/release/nssm-2.24.zip
+    archive_path: C:\\ProgramData\\REP\\nssm-2.24.zip
+    extract_path: C:\\ProgramData\\REP\\nssm-2.24
+    exe_path: C:\\ProgramData\\REP\\nssm-2.24\\win64\\nssm.exe
   config_path: C:\\ProgramData\\REP\\collector.yaml
   log_path: C:\\ProgramData\\REP\\collector.log
   directory: C:\\ProgramData\\REP
@@ -22,7 +27,7 @@ trainee_workstation_shortcuts:
   - path: C:\\Users\\Public\\Desktop\\LiveSession.url
     url: https://rep-core.internal/live
     icon: C:\\Program Files\\Internet Explorer\\iexplore.exe
-trainee_workstation_health_command: "Get-Service -Name REPCollector"
+trainee_workstation_health_command: "Get-Service -Name {{ trainee_workstation_collector.service_name }}"
 trainee_workstation_welcome_note:
   directory: C:\\Labs
   filename: WELCOME.txt
