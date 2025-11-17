@@ -50,8 +50,7 @@
 - name: Ensure collector service is running
   ansible.windows.win_service:
     name: "{{ trainee_workstation_collector.service_name }}"
-    path: "{{ trainee_workstation_collector.service_binary }}"
-    arguments: "{{ trainee_workstation_collector.service_args }}"
+    path: "{{ trainee_workstation_collector.service_binary }} {{ trainee_workstation_collector.service_args }}"
     start_mode: auto
     state: started
   when: ansible_facts.os_family | default('') == 'Windows'
