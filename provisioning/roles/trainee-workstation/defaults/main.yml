@@ -9,7 +9,7 @@ trainee_workstation_collector:
   service_wrapper:
     url: https://nssm.cc/release/nssm-2.24.zip
     archive_path: C:\\ProgramData\\REP\\nssm-2.24.zip
-    extract_path: C:\\ProgramData\\REP\\nssm-2.24
+    extract_path: C:\\ProgramData\\REP
     exe_path: C:\\ProgramData\\REP\\nssm-2.24\\win64\\nssm.exe
   config_path: C:\\ProgramData\\REP\\collector.yaml
   log_path: C:\\ProgramData\\REP\\collector.log
