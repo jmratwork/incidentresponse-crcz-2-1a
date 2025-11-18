@@ -38,6 +38,17 @@
   when: ansible_facts.os_family | default('') == 'Windows'
   notify: restart rep collector
 
+- name: Determine collector service wrapper architecture
+  ansible.builtin.set_fact:
+    trainee_workstation_nssm_arch: "{{ 'win64' if (ansible_processor_architecture | default(ansible_architecture | default('')) | lower | regex_search('amd64|x86_64|64')) else 'win32' }}"
+  when: ansible_facts.os_family | default('') == 'Windows'
+
+- name: Set collector service wrapper executable path
+  ansible.builtin.set_fact:
+    trainee_workstation_nssm_path: "{{ trainee_workstation_collector.service_wrapper.extract_path }}\\nssm-2.24\\{{ trainee_workstation_nssm_arch }}\\nssm.exe"
+    trainee_workstation_collector: "{{ trainee_workstation_collector | combine({'service_wrapper': trainee_workstation_collector.service_wrapper | combine({'exe_path': trainee_workstation_nssm_path})}) }}"
+  when: ansible_facts.os_family | default('') == 'Windows'
+
 - name: Download collector service wrapper
   ansible.windows.win_get_url:
     url: "{{ trainee_workstation_collector.service_wrapper.url }}"
