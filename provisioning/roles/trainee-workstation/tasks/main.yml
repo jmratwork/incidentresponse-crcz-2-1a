@@ -46,6 +46,10 @@
 - name: Set collector service wrapper executable path
   ansible.builtin.set_fact:
     trainee_workstation_nssm_path: "{{ trainee_workstation_collector.service_wrapper.extract_path }}\\nssm-2.24\\{{ trainee_workstation_nssm_arch }}\\nssm.exe"
+  when: ansible_facts.os_family | default('') == 'Windows'
+
+- name: Configure collector service wrapper executable path
+  ansible.builtin.set_fact:
     trainee_workstation_collector: "{{ trainee_workstation_collector | combine({'service_wrapper': trainee_workstation_collector.service_wrapper | combine({'exe_path': trainee_workstation_nssm_path})}) }}"
   when: ansible_facts.os_family | default('') == 'Windows'
 
