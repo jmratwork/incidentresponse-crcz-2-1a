@@ -53,12 +53,36 @@
     trainee_workstation_collector: "{{ trainee_workstation_collector | combine({'service_wrapper': trainee_workstation_collector.service_wrapper | combine({'exe_path': trainee_workstation_nssm_path})}) }}"
   when: ansible_facts.os_family | default('') == 'Windows'
 
+- name: Determine collector service wrapper source type
+  ansible.builtin.set_fact:
+    trainee_workstation_service_wrapper_remote: "{{ trainee_workstation_collector.service_wrapper.url is match('^https?://') }}"
+  when: ansible_facts.os_family | default('') == 'Windows'
+
+- name: Check for existing collector service wrapper archive
+  ansible.windows.win_stat:
+    path: "{{ trainee_workstation_collector.service_wrapper.archive_path }}"
+  register: trainee_workstation_service_wrapper_archive
+  when: ansible_facts.os_family | default('') == 'Windows'
+
+- name: Copy bundled collector service wrapper
+  ansible.windows.win_copy:
+    src: "{{ trainee_workstation_collector.service_wrapper.url }}"
+    dest: "{{ trainee_workstation_collector.service_wrapper.archive_path }}"
+    force: false
+  when:
+    - ansible_facts.os_family | default('') == 'Windows'
+    - not trainee_workstation_service_wrapper_remote
+    - not trainee_workstation_service_wrapper_archive.stat.exists
+
 - name: Download collector service wrapper
   ansible.windows.win_get_url:
     url: "{{ trainee_workstation_collector.service_wrapper.url }}"
     dest: "{{ trainee_workstation_collector.service_wrapper.archive_path }}"
     force: false
-  when: ansible_facts.os_family | default('') == 'Windows'
+  when:
+    - ansible_facts.os_family | default('') == 'Windows'
+    - trainee_workstation_service_wrapper_remote
+    - not trainee_workstation_service_wrapper_archive.stat.exists
 
 - name: Extract collector service wrapper
   community.windows.win_unzip:

@@ -9,7 +9,7 @@ trainee_workstation_collector:
   service_binary: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe
   service_args: -NoProfile -ExecutionPolicy Bypass -File "{{ trainee_workstation_collector_script_path }}"
   service_wrapper:
-    url: https://nssm.cc/release/nssm-2.24.zip
+    url: "{{ role_path }}/files/nssm-2.24.zip"
     archive_path: C:\\ProgramData\\REP\\nssm-2.24.zip
     extract_path: "{{ trainee_workstation_service_wrapper_extract_path }}"
     exe_path: "{{ trainee_workstation_service_wrapper_exe_path }}"
