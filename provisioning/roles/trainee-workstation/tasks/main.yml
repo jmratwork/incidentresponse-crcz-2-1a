@@ -45,7 +45,7 @@
 
 - name: Set collector service wrapper executable path
   ansible.builtin.set_fact:
-    trainee_workstation_nssm_path: "{{ trainee_workstation_collector.service_wrapper.extract_path }}\\nssm-2.24\\{{ trainee_workstation_nssm_arch }}\\nssm.exe"
+    trainee_workstation_nssm_path: "{{ [trainee_workstation_collector.service_wrapper.extract_path, 'nssm-2.24', trainee_workstation_nssm_arch, 'nssm.exe'] | win_path_join }}"
   when: ansible_facts.os_family | default('') == 'Windows'
 
 - name: Configure collector service wrapper executable path
@@ -64,8 +64,21 @@
   community.windows.win_unzip:
     src: "{{ trainee_workstation_collector.service_wrapper.archive_path }}"
     dest: "{{ trainee_workstation_collector.service_wrapper.extract_path }}"
-    creates: "{{ trainee_workstation_collector.service_wrapper.exe_path }}"
+    creates: "{{ trainee_workstation_nssm_path }}"
   when: ansible_facts.os_family | default('') == 'Windows'
+
+- name: Validate collector service wrapper extraction
+  ansible.windows.win_stat:
+    path: "{{ trainee_workstation_nssm_path }}"
+  register: trainee_workstation_nssm_stat
+  when: ansible_facts.os_family | default('') == 'Windows'
+
+- name: Fail when collector service wrapper is missing
+  ansible.builtin.fail:
+    msg: "Collector service wrapper binary not found at {{ trainee_workstation_nssm_path }}. Verify extraction of {{ trainee_workstation_collector.service_wrapper.archive_path }}."
+  when:
+    - ansible_facts.os_family | default('') == 'Windows'
+    - not trainee_workstation_nssm_stat.stat.exists
 
 - name: Publish trainee shortcuts
   ansible.windows.win_template:
@@ -81,7 +94,7 @@
     name: "{{ trainee_workstation_collector.service_name }}"
     application: "{{ trainee_workstation_collector.service_binary }}"
     app_parameters: "{{ trainee_workstation_collector.service_args }}"
-    nssm_path: "{{ trainee_workstation_collector.service_wrapper.exe_path }}"
+    nssm_path: "{{ trainee_workstation_nssm_path }}"
     start_mode: auto
     state: started
   when: ansible_facts.os_family | default('') == 'Windows'
