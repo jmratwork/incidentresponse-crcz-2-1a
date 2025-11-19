@@ -7,6 +7,45 @@ $eventSource = 'TraineeCollectorScript'
 $eventLogName = 'Application'
 $eventLogAvailable = $true
 
+function Write-CollectorLog {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+        [int]$MaxAttempts = 5
+    )
+
+    $writeSuccessful = $false
+    $attempt = 0
+
+    while (-not $writeSuccessful -and $attempt -lt $MaxAttempts) {
+        try {
+            Add-Content -Path $logPath -Value $Message -ErrorAction Stop
+            $writeSuccessful = $true
+        } catch {
+            $attempt++
+            if ($attempt -ge $MaxAttempts) {
+                $timestamp = Get-Date -Format o
+                $warningMessage = "[$timestamp] WARNING: Failed to write log entry to $logPath after $attempt attempts: $($_.Exception.Message)"
+                Write-Warning $warningMessage
+                if ($eventLogAvailable) {
+                    try {
+                        Write-EventLog -LogName $eventLogName -Source $eventSource -EntryType Warning -EventId 1001 -Message $warningMessage -ErrorAction Stop
+                    } catch {
+                        $eventLogAvailable = $false
+                        $eventLogWarning = "[$timestamp] WARNING: Unable to emit event log entry: $($_.Exception.Message)"
+                        Write-Warning $eventLogWarning
+                    }
+                }
+            } else {
+                $backoffSeconds = [math]::Pow(2, $attempt)
+                Start-Sleep -Seconds $backoffSeconds
+            }
+        }
+    }
+
+    return $writeSuccessful
+}
+
 if (-not (Test-Path -Path $logDirectory)) {
     New-Item -Path $logDirectory -ItemType Directory -Force | Out-Null
 }
@@ -31,7 +70,7 @@ try {
 } catch {
     $eventLogAvailable = $false
     $eventLogWarning = "[$(Get-Date -Format o)] WARNING: Event log unavailable for source '$eventSource': $($_.Exception.Message)"
-    Add-Content -Path $logPath -Value $eventLogWarning
+    Write-CollectorLog -Message $eventLogWarning | Out-Null
     Write-Warning $eventLogWarning
 }
 
@@ -40,40 +79,12 @@ if ($configContent) {
 } else {
     $startupMessage = "[$(Get-Date -Format o)] Collector configuration not found or empty."
 }
-Add-Content -Path $logPath -Value $startupMessage
+Write-CollectorLog -Message $startupMessage | Out-Null
 
 while ($true) {
     $timestamp = Get-Date -Format o
     $heartbeat = "[$timestamp] Collector heartbeat"
-    $writeSuccessful = $false
-    $attempt = 0
-    $maxAttempts = 5
-
-    while (-not $writeSuccessful -and $attempt -lt $maxAttempts) {
-        try {
-            Add-Content -Path $logPath -Value $heartbeat -ErrorAction Stop
-            $writeSuccessful = $true
-        } catch {
-            $attempt++
-            if ($attempt -ge $maxAttempts) {
-                $warningMessage = "[$timestamp] WARNING: Failed to write collector heartbeat to $logPath after $attempt attempts: $($_.Exception.Message)"
-                Write-Warning $warningMessage
-                if ($eventLogAvailable) {
-                    try {
-                        Write-EventLog -LogName $eventLogName -Source $eventSource -EntryType Warning -EventId 1001 -Message $warningMessage -ErrorAction Stop
-                    } catch {
-                        $eventLogAvailable = $false
-                        $eventLogWarning = "[$timestamp] WARNING: Unable to emit event log entry: $($_.Exception.Message)"
-                        Write-Warning $eventLogWarning
-                        Add-Content -Path $logPath -Value $eventLogWarning
-                    }
-                }
-            } else {
-                $backoffSeconds = [math]::Pow(2, $attempt)
-                Start-Sleep -Seconds $backoffSeconds
-            }
-        }
-    }
+    Write-CollectorLog -Message $heartbeat | Out-Null
 
     Start-Sleep -Seconds 60
 }
