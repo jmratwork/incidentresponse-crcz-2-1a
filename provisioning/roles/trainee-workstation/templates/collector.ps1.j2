@@ -3,6 +3,8 @@ $ErrorActionPreference = 'Stop'
 $configPath = "{{ trainee_workstation_collector.config_path }}"
 $logPath = "{{ trainee_workstation_collector.log_path }}"
 $logDirectory = Split-Path -Path $logPath -Parent
+$eventSource = 'TraineeCollectorScript'
+$eventLogName = 'Application'
 
 if (-not (Test-Path -Path $logDirectory)) {
     New-Item -Path $logDirectory -ItemType Directory -Force | Out-Null
@@ -21,6 +23,14 @@ if (-not (Test-Path -Path $logPath)) {
     New-Item -Path $logPath -ItemType File -Force | Out-Null
 }
 
+if (-not [System.Diagnostics.EventLog]::SourceExists($eventSource)) {
+    try {
+        New-EventLog -LogName $eventLogName -Source $eventSource -ErrorAction Stop
+    } catch {
+        Write-Warning "Unable to register event source '$eventSource': $($_.Exception.Message)"
+    }
+}
+
 if ($configContent) {
     $startupMessage = "[$(Get-Date -Format o)] Loaded collector configuration (${($configContent.Length)} characters)."
 } else {
@@ -31,6 +41,30 @@ Add-Content -Path $logPath -Value $startupMessage
 while ($true) {
     $timestamp = Get-Date -Format o
     $heartbeat = "[$timestamp] Collector heartbeat"
-    Add-Content -Path $logPath -Value $heartbeat
+    $writeSuccessful = $false
+    $attempt = 0
+    $maxAttempts = 5
+
+    while (-not $writeSuccessful -and $attempt -lt $maxAttempts) {
+        try {
+            Add-Content -Path $logPath -Value $heartbeat -ErrorAction Stop
+            $writeSuccessful = $true
+        } catch {
+            $attempt++
+            if ($attempt -ge $maxAttempts) {
+                $warningMessage = "[$timestamp] WARNING: Failed to write collector heartbeat to $logPath after $attempt attempts: $($_.Exception.Message)"
+                Write-Warning $warningMessage
+                try {
+                    Write-EventLog -LogName $eventLogName -Source $eventSource -EntryType Warning -EventId 1001 -Message $warningMessage -ErrorAction Stop
+                } catch {
+                    Write-Warning "Unable to emit event log entry: $($_.Exception.Message)"
+                }
+            } else {
+                $backoffSeconds = [math]::Pow(2, $attempt)
+                Start-Sleep -Seconds $backoffSeconds
+            }
+        }
+    }
+
     Start-Sleep -Seconds 60
 }
