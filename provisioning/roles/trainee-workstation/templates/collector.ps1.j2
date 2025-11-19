@@ -5,6 +5,7 @@ $logPath = "{{ trainee_workstation_collector.log_path }}"
 $logDirectory = Split-Path -Path $logPath -Parent
 $eventSource = 'TraineeCollectorScript'
 $eventLogName = 'Application'
+$eventLogAvailable = $true
 
 if (-not (Test-Path -Path $logDirectory)) {
     New-Item -Path $logDirectory -ItemType Directory -Force | Out-Null
@@ -23,12 +24,15 @@ if (-not (Test-Path -Path $logPath)) {
     New-Item -Path $logPath -ItemType File -Force | Out-Null
 }
 
-if (-not [System.Diagnostics.EventLog]::SourceExists($eventSource)) {
-    try {
+try {
+    if (-not [System.Diagnostics.EventLog]::SourceExists($eventSource)) {
         New-EventLog -LogName $eventLogName -Source $eventSource -ErrorAction Stop
-    } catch {
-        Write-Warning "Unable to register event source '$eventSource': $($_.Exception.Message)"
     }
+} catch {
+    $eventLogAvailable = $false
+    $eventLogWarning = "[$(Get-Date -Format o)] WARNING: Event log unavailable for source '$eventSource': $($_.Exception.Message)"
+    Add-Content -Path $logPath -Value $eventLogWarning
+    Write-Warning $eventLogWarning
 }
 
 if ($configContent) {
@@ -54,10 +58,15 @@ while ($true) {
             if ($attempt -ge $maxAttempts) {
                 $warningMessage = "[$timestamp] WARNING: Failed to write collector heartbeat to $logPath after $attempt attempts: $($_.Exception.Message)"
                 Write-Warning $warningMessage
-                try {
-                    Write-EventLog -LogName $eventLogName -Source $eventSource -EntryType Warning -EventId 1001 -Message $warningMessage -ErrorAction Stop
-                } catch {
-                    Write-Warning "Unable to emit event log entry: $($_.Exception.Message)"
+                if ($eventLogAvailable) {
+                    try {
+                        Write-EventLog -LogName $eventLogName -Source $eventSource -EntryType Warning -EventId 1001 -Message $warningMessage -ErrorAction Stop
+                    } catch {
+                        $eventLogAvailable = $false
+                        $eventLogWarning = "[$timestamp] WARNING: Unable to emit event log entry: $($_.Exception.Message)"
+                        Write-Warning $eventLogWarning
+                        Add-Content -Path $logPath -Value $eventLogWarning
+                    }
                 }
             } else {
                 $backoffSeconds = [math]::Pow(2, $attempt)
