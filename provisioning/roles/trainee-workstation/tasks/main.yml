@@ -118,7 +118,7 @@
     name: "{{ trainee_workstation_collector.service_name }}"
     application: "{{ trainee_workstation_collector.service_binary }}"
     app_parameters: "{{ trainee_workstation_collector.service_args }}"
-    nssm_path: "{{ trainee_workstation_nssm_path }}"
+    executable: "{{ trainee_workstation_nssm_path }}"
     start_mode: auto
     state: started
   when: ansible_facts.os_family | default('') == 'Windows'
