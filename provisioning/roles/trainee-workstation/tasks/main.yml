@@ -142,11 +142,47 @@
   when: ansible_facts.os_family | default('') == 'Windows'
 
 - name: Validate collector service status
-  ansible.windows.win_shell: "{{ trainee_workstation_health_command }}"
-  register: trainee_collector_health
-  changed_when: false
-  until: trainee_collector_health.rc == 0 and 'Running' in trainee_collector_health.stdout
-  retries: 5
-  delay: 5
-  failed_when: trainee_collector_health.rc != 0 or 'Running' not in trainee_collector_health.stdout
   when: ansible_facts.os_family | default('') == 'Windows'
+  block:
+    - name: Ensure collector service is started
+      ansible.windows.win_service:
+        name: "{{ trainee_workstation_collector.service_name }}"
+        state: started
+      register: trainee_collector_service_start
+
+    - name: Verify collector service is running
+      ansible.windows.win_shell: "{{ trainee_workstation_health_command }}"
+      register: trainee_collector_health
+      changed_when: false
+      until: trainee_collector_health.rc == 0 and 'Running' in trainee_collector_health.stdout
+      retries: 12
+      delay: 5
+      failed_when: trainee_collector_health.rc != 0 or 'Running' not in trainee_collector_health.stdout
+
+  rescue:
+    - name: Read collector logs on failure
+      ansible.windows.win_shell: |
+        $paths = @(
+          "{{ trainee_workstation_collector.log_path }}",
+          "{{ trainee_workstation_collector.stdout_log_path }}",
+          "{{ trainee_workstation_collector.stderr_log_path }}"
+        )
+        foreach ($p in $paths) {
+          if (Test-Path $p) {
+            Write-Output "===== $p ====="
+            Get-Content -Path $p -Tail 50
+          } else {
+            Write-Output "===== $p (missing) ====="
+          }
+        }
+      register: trainee_collector_logs
+      changed_when: false
+
+    - name: Fail with collector service diagnostics
+      ansible.builtin.fail:
+        msg: |
+          Collector service failed to start or reach a running state.
+          Service start result: {{ trainee_collector_service_start | default({}) }}
+          Health check output: {{ trainee_collector_health.stdout | default('') }}
+          Logs:
+          {{ trainee_collector_logs.stdout | default('') }}
