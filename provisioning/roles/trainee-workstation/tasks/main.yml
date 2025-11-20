@@ -134,8 +134,7 @@
     executable: "{{ trainee_workstation_nssm_path }}"
     app_stdout: "{{ trainee_workstation_collector.stdout_log_path }}"
     app_stderr: "{{ trainee_workstation_collector.stderr_log_path }}"
-    app_exit:
-      - Default Restart
+    app_exit: "Default Restart"
     app_restart_delay: 10000
     start_mode: auto
     state: started
