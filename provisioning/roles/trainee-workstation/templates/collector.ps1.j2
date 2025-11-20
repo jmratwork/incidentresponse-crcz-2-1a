@@ -82,9 +82,18 @@ if ($configContent) {
 Write-CollectorLog -Message $startupMessage | Out-Null
 
 while ($true) {
-    $timestamp = Get-Date -Format o
-    $heartbeat = "[$timestamp] Collector heartbeat"
-    Write-CollectorLog -Message $heartbeat | Out-Null
+    try {
+        $timestamp = Get-Date -Format o
+        $heartbeat = "[$timestamp] Collector heartbeat"
+        Write-CollectorLog -Message $heartbeat | Out-Null
 
-    Start-Sleep -Seconds 60
+        Start-Sleep -Seconds 60
+    } catch {
+        $errorTimestamp = Get-Date -Format o
+        $errorMessage = "[$errorTimestamp] ERROR: Collector loop encountered an exception: $($_.Exception.Message)"
+        Write-CollectorLog -Message $errorMessage | Out-Null
+        Write-Warning $errorMessage
+
+        Start-Sleep -Seconds 10
+    }
 }
