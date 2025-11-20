@@ -3,6 +3,9 @@ $ErrorActionPreference = 'Stop'
 $configPath = "{{ trainee_workstation_collector.config_path }}"
 $logPath = "{{ trainee_workstation_collector.log_path }}"
 $logDirectory = Split-Path -Path $logPath -Parent
+# Service wrapper stdout/stderr logs are stored at
+# {{ trainee_workstation_collector.stdout_log_path }} and {{ trainee_workstation_collector.stderr_log_path }}
+# for troubleshooting when the service fails to start.
 $eventSource = 'TraineeCollectorScript'
 $eventLogName = 'Application'
 $eventLogAvailable = $true
