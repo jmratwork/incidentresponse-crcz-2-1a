@@ -23,7 +23,18 @@ export ANSIBLE_PASSWORD_REP_SCHEDULER='********'
 
 4. If you prefer to store secrets in Ansible Vault files, replace the `lookup('env', ...)` expressions with `ansible-vault` variables and reference the vault when running the playbooks.
 
-## 3. Install Ansible dependencies
+## 3. System prerequisites
+
+Install the base utilities required by the provisioning workflow before pulling Ansible dependencies:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y wget
+python3 -m pip install --upgrade pip
+python3 -m pip install virtualbmc
+```
+
+## 4. Install Ansible dependencies
 
 ```bash
 python3 -m pip install --upgrade ansible
@@ -34,7 +45,7 @@ ansible-galaxy collection install -r provisioning/collections.yml
 - Install `pywinrm` to enable Ansible WinRM connectivity. Use `python3 -m pip install "pywinrm[credssp]"` when the sandbox requires CredSSP delegation support.
 - Windows connectivity for trainee machines requires WinRM over TLS (port 5986). Configure certificates or use the inventory option `ansible_winrm_server_cert_validation=ignore` for lab environments.
 
-## 4. Execute the playbooks
+## 5. Execute the playbooks
 
 ```bash
 provisioning/run_playbook.sh inventory.ini
@@ -56,7 +67,7 @@ Use the helper scripts in `provisioning/case-1a/scripts/` to exercise REP servic
   require a bearer token supplied in `REP_API_TOKEN`. Set `REP_REPORTING_EXPORT_PATH` when the Reporting Workspace exposes a
   custom path.
 
-## 5. Validation steps
+## 6. Validation steps
 
 - Check SSH or WinRM connectivity with `ansible all -i inventory.ini -m ping` (use `ansible.windows.win_ping` for Windows groups).
 - Verify that key services are running (`nginx` on the REP backend, quiz engine workers and the Grafana service on the reporting workspace).
