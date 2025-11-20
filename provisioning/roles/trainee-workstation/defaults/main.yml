@@ -15,6 +15,8 @@ trainee_workstation_collector:
     exe_path: "{{ trainee_workstation_service_wrapper_exe_path }}"
   config_path: C:\ProgramData\REP\collector.yaml
   log_path: C:\ProgramData\REP\collector.log
+  stdout_log_path: C:\ProgramData\REP\collector-stdout.log
+  stderr_log_path: C:\ProgramData\REP\collector-stderr.log
   directory: C:\ProgramData\REP
   ingestion_pipeline:
     interval_minutes: 1

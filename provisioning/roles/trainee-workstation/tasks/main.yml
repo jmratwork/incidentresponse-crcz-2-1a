@@ -113,12 +113,30 @@
     loop_var: shortcut
   when: ansible_facts.os_family | default('') == 'Windows'
 
+- name: Ensure collector log directories exist
+  ansible.windows.win_file:
+    path: "{{ log_dir }}"
+    state: directory
+  loop: "{{ [
+      trainee_workstation_collector.log_path | regex_replace('\\\\[^\\\\]+$', ''),
+      trainee_workstation_collector.stdout_log_path | regex_replace('\\\\[^\\\\]+$', ''),
+      trainee_workstation_collector.stderr_log_path | regex_replace('\\\\[^\\\\]+$', '')
+    ] | unique }}"
+  loop_control:
+    loop_var: log_dir
+  when: ansible_facts.os_family | default('') == 'Windows'
+
 - name: Ensure collector service is running
   community.windows.win_nssm:
     name: "{{ trainee_workstation_collector.service_name }}"
     application: "{{ trainee_workstation_collector.service_binary }}"
     arguments: "{{ trainee_workstation_collector.service_args }}"
     executable: "{{ trainee_workstation_nssm_path }}"
+    app_stdout: "{{ trainee_workstation_collector.stdout_log_path }}"
+    app_stderr: "{{ trainee_workstation_collector.stderr_log_path }}"
+    app_exit:
+      - Default Restart
+    app_restart_delay: 10000
     start_mode: auto
     state: started
   when: ansible_facts.os_family | default('') == 'Windows'
