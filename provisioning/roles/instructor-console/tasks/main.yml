@@ -52,7 +52,15 @@
     label: "{{ item.name | upper }}"
   register: instructor_console_shortcuts_check
   changed_when: false
-  failed_when: instructor_console_shortcuts_check.stdout | trim != 'function'
+  failed_when:
+    instructor_console_shortcuts_check.results
+    | map(attribute='stdout')
+    | map('trim')
+    | select('ne', 'function')
+    | list
+    | length
+    | int
+    != 0
   when: instructor_console_shortcuts | length > 0
 
 - name: Verify instructor console shortcuts command results
