@@ -16,6 +16,8 @@ COLLECTIONS_FILE="$SCRIPT_DIR/collections.yml"
 
 require_cmd ansible-galaxy
 require_cmd ansible-playbook
+require_cmd wget
+require_cmd virtualbmc
 
 echo "[run_playbook] Installing required collections and running provisioning/playbook.yml." >&2
 echo "[run_playbook] Use this wrapper instead of calling ansible-playbook directly on KYPO/CRCZ to avoid missing modules." >&2

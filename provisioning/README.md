@@ -13,6 +13,15 @@ The playbooks in this directory prepare the infrastructure required by the phish
 
 ## Requirements
 
+- System utilities: `wget` and `virtualbmc` installed on the control node. Example installation commands:
+
+  ```bash
+  sudo apt-get update
+  sudo apt-get install -y wget
+  python3 -m pip install --upgrade pip
+  python3 -m pip install virtualbmc
+  ```
+
 - Ansible 2.15 or newer plus the `pywinrm` Python package for WinRM connectivity (use `pywinrm[credssp]` when the scenario requires CredSSP).
 - Network reachability towards the hosts defined in `provisioning/case-1a/topology.yml`.
 - Credentials provided through Ansible Vault files or environment variables (see `inventory.sample`).
