@@ -127,9 +127,7 @@
   ansible.windows.win_shell: "{{ trainee_workstation_health_command }}"
   register: trainee_collector_health
   changed_when: false
-  until:
-    - trainee_collector_health.rc == 0
-    - 'Running' in trainee_collector_health.stdout
+  until: trainee_collector_health.rc == 0 and 'Running' in trainee_collector_health.stdout
   retries: 5
   delay: 5
   failed_when: trainee_collector_health.rc != 0 or 'Running' not in trainee_collector_health.stdout
