@@ -146,7 +146,7 @@ def test_instructor_console_shortcut_validation_handles_empty_list():
 
     failed_when = task.get("failed_when")
     assert isinstance(failed_when, str)
-    assert "select('ne', 'function')" in failed_when
+    assert "stdout | trim != 'function'" in failed_when
 
 
 def test_reporting_workspace_healthcheck_defaults_expose_fallbacks():
