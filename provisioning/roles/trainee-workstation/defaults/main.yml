@@ -26,6 +26,7 @@ trainee_workstation_collector:
     transports:
       - type: https
         url: https://rep-core.internal/ingest
+        # Override this token in inventory/group_vars with a real value before deploying.
         token: changeme
       - type: syslog
         host: soc-gateway.internal
