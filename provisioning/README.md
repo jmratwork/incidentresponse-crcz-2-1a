@@ -69,6 +69,7 @@ The wrapper installs `ansible.windows` and `community.general` from `provisionin
 - **Service:** distributes the REP Collector agent configuration, the shortcuts on participants' Windows desktops and the lab welcome message.
 - **Configuration:** `ansible.windows.win_template` renders `collector.yaml` and the `.url` shortcuts described in `trainee_workstation_shortcuts`, while `ansible.windows.win_copy` publishes the `WELCOME.txt` note in `{{ trainee_workstation_welcome_note.directory }}`.
 - **Key variables:** `trainee_workstation_collector.*` (path, service and transports), `trainee_workstation_shortcuts` and `trainee_workstation_welcome_note.*` (directory, name and message content).
+- **Service wrapper source:** override `trainee_workstation_service_wrapper_url` when pulling `nssm-2.24.zip` from a remote location and adjust `trainee_workstation_service_wrapper_extract_path` when changing the extraction directory. Set `trainee_workstation_service_wrapper_arch` to `win32` for 32-bit hosts to place `nssm.exe` under the correct architecture directory.
 - **Validation:** the service state is checked with `Get-Service` and restarts automatically if the templates change.
 
 ## Parameterisation and checks
