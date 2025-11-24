@@ -5,7 +5,7 @@ trainee_workstation_collector:
     transports:
       - type: https
         url: https://rep-core.internal/ingest
-        token: "{{ lookup('env', 'TRAINEE_COLLECTOR_TOKEN') | default('rep-training-collector-token', true) }}"
+        token: rep-core-trainee-collector-9c0b4d8f
       - type: syslog
         host: soc-gateway.internal
         port: 514
