@@ -40,7 +40,12 @@
 
 - name: Determine collector service wrapper architecture
   ansible.builtin.set_fact:
-    trainee_workstation_nssm_arch: "{{ 'win64' if (ansible_processor_architecture | default(ansible_architecture | default('')) | lower | regex_search('amd64|x86_64|64')) else 'win32' }}"
+    trainee_workstation_nssm_arch: >-
+      {{
+        (trainee_workstation_service_wrapper_arch | default('') | lower)
+        if (trainee_workstation_service_wrapper_arch | default('') | lower) in ['win32', 'win64']
+        else ('win64' if (ansible_processor_architecture | default(ansible_architecture | default('')) | lower | regex_search('amd64|x86_64|64')) else 'win32')
+      }}
   when: ansible_facts.os_family | default('') == 'Windows'
 
 - name: Set collector service wrapper executable path
@@ -99,7 +104,10 @@
 
 - name: Fail when collector service wrapper is missing
   ansible.builtin.fail:
-    msg: "Collector service wrapper binary not found at {{ trainee_workstation_nssm_path }}. Verify extraction of {{ trainee_workstation_collector.service_wrapper.archive_path }}."
+    msg: >-
+      Collector service wrapper binary not found at {{ trainee_workstation_nssm_path }}.
+      Verify extraction of {{ trainee_workstation_collector.service_wrapper.archive_path }} from {{ trainee_workstation_collector.service_wrapper.url }}
+      and adjust trainee_workstation_service_wrapper_arch if the host is 32-bit.
   when:
     - ansible_facts.os_family | default('') == 'Windows'
     - not trainee_workstation_nssm_stat.stat.exists
