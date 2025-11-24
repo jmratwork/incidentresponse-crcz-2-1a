@@ -1,4 +1,18 @@
 ---
+- name: Validate collector ingestion token override
+  ansible.builtin.assert:
+    that:
+      - (trainee_workstation_collector.ingestion_pipeline.transports
+          | selectattr('token', 'defined')
+          | map(attribute='token')
+          | select('equalto', 'changeme')
+          | list
+          | length) == 0
+    fail_msg: >-
+      The collector ingestion token is still set to the default placeholder value.
+      Set trainee_workstation_collector.ingestion_pipeline.transports[].token in inventory
+      or group_vars to a real token before running this role.
+
 - name: Ensure REP data directory exists
   ansible.windows.win_file:
     path: "{{ trainee_workstation_collector.directory }}"
