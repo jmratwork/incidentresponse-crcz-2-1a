@@ -1,0 +1,11 @@
+---
+trainee_workstation_collector:
+  ingestion_pipeline:
+    interval_minutes: 1
+    transports:
+      - type: https
+        url: https://rep-core.internal/ingest
+        token: "{{ lookup('env', 'TRAINEE_COLLECTOR_TOKEN') | default('rep-training-collector-token', true) }}"
+      - type: syslog
+        host: soc-gateway.internal
+        port: 514
