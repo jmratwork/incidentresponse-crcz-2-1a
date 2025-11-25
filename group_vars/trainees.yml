@@ -5,7 +5,7 @@ trainee_workstation_collector:
     transports:
       - type: https
         url: https://rep-core.internal/ingest
-        token: rep-core-trainee-collector-a12fb6e3
+        token: rep-core-trainee-collector-52f4c918
       - type: syslog
         host: soc-gateway.internal
         port: 514
