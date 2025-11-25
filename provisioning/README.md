@@ -41,6 +41,12 @@ The playbooks in this directory prepare the infrastructure required by the phish
 provisioning/run_playbook.sh inventory.ini
 ```
 
+> **Trainee inventory note:** keep trainee hosts under the `trainees` group so the
+> collector token override in `group_vars/trainees.yml` is applied. If you use a
+> different grouping, duplicate
+> `trainee_workstation_collector.ingestion_pipeline.transports[].token` in the
+> relevant inventory or group variables file.
+
 The wrapper installs `ansible.windows` and `community.general` from `provisioning/collections.yml` before running `provisioning/playbook.yml`, ensuring the Windows modules resolve correctly on KYPO/CRCZ environments.
 
 ## Role functional requirements
