@@ -41,6 +41,28 @@
           install required collections before executing this playbook directly.
         success_msg: ansible.windows collection is available.
 
+- name: Set management user password on Debian and Ubuntu systems
+  hosts: all:!trainees
+  become: true
+  tasks:
+    - name: Set password on user ubuntu
+      ansible.builtin.user:
+        name: ubuntu
+        password: "$y$j9T$r1LaddN0V6MPqFmZl5U7C/$4xbYJL5zi/YFU85SL/gXz5UXs3JAXV5dU5CUvTN/WN9"
+        update_password: always
+      when:
+        - ansible_os_family == "Debian"
+        - ansible_distribution == "Ubuntu"
+
+    - name: Set password on user debian
+      ansible.builtin.user:
+        name: debian
+        password: "$y$j9T$z5kEdppfL2Iie0nI.MK/c0$ZLkX5b3a2BKKhBF/MtiH1yW.5iIzrc4wClOwr3tWBD."
+        update_password: always
+      when:
+        - ansible_os_family == "Debian"
+        - ansible_distribution == "Debian"
+
 - name: Configure REP core services
   hosts: rep-scheduler, rep-live-session, rep-quiz-engine, rep-practical-labs
   become: true
