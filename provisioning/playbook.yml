@@ -42,15 +42,27 @@
         success_msg: ansible.windows collection is available.
 
 - name: Set management user password on Debian and Ubuntu systems
-  hosts: all:!trainees
-  become: true
+  hosts: all
+  gather_facts: false
+  vars:
+    uses_powershell_shell: >-
+      {{
+        (ansible_shell_type | default('')) == 'powershell'
+        or (ansible_connection | default('ssh')) in ['winrm', 'psrp']
+      }}
   tasks:
+    - name: Gather facts on Linux hosts only
+      ansible.builtin.setup:
+      when: not uses_powershell_shell
+
     - name: Set password on user ubuntu
       ansible.builtin.user:
         name: ubuntu
         password: "$y$j9T$r1LaddN0V6MPqFmZl5U7C/$4xbYJL5zi/YFU85SL/gXz5UXs3JAXV5dU5CUvTN/WN9"
         update_password: always
+      become: true
       when:
+        - not uses_powershell_shell
         - ansible_os_family == "Debian"
         - ansible_distribution == "Ubuntu"
 
@@ -59,7 +71,9 @@
         name: debian
         password: "$y$j9T$z5kEdppfL2Iie0nI.MK/c0$ZLkX5b3a2BKKhBF/MtiH1yW.5iIzrc4wClOwr3tWBD."
         update_password: always
+      become: true
       when:
+        - not uses_powershell_shell
         - ansible_os_family == "Debian"
         - ansible_distribution == "Debian"
 
