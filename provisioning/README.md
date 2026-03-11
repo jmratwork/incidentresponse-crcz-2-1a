@@ -26,16 +26,15 @@ The playbooks in this directory prepare the infrastructure required by the phish
 - Network reachability towards the hosts defined in `provisioning/case-1a/topology.yml`.
 - Credentials provided through Ansible Vault files or environment variables (see `inventory.sample`).
 
-> **KYPO/CRCZ note:** running `ansible-playbook` directly is unsupported because the control node does not ship with the
-> required Ansible collections. Always execute `provisioning/run_playbook.sh`, which installs dependencies and launches the
-> playbook. If you must call `ansible-playbook` manually (e.g. for debugging), run
-> `ansible-galaxy collection install -r provisioning/collections.yml` first.
+> **KYPO/CRCZ mandatory workflow:** run `provisioning/run_playbook.sh` as the only supported entrypoint. The wrapper installs collections, validates `ansible.windows`, `community.general` and `community.windows`, and only then starts Ansible.
+>
+> **Manual `ansible-playbook` runs are for debugging only.** If you debug manually, install dependencies first with `ansible-galaxy collection install -r provisioning/collections.yml` and verify them with `provisioning/scripts/check_required_collections.sh`.
 
 ## Running the playbook
 
 1. Export sensitive variables or prepare an Ansible Vault file that contains the required passwords.
 2. Copy `inventory.sample` to `inventory.ini` (or keep the `.sample` file) and adjust the host addresses if necessary.
-3. Execute the site playbook:
+3. Execute the site playbook (required on KYPO/CRCZ):
 
 ```bash
 provisioning/run_playbook.sh inventory.ini
@@ -47,7 +46,7 @@ provisioning/run_playbook.sh inventory.ini
 > `trainee_workstation_collector.ingestion_pipeline.transports[].token` in the
 > relevant inventory or group variables file.
 
-The wrapper installs `ansible.windows` and `community.general` from `provisioning/collections.yml` before running `provisioning/playbook.yml`, ensuring the Windows modules resolve correctly on KYPO/CRCZ environments.
+The wrapper installs collections from `provisioning/collections.yml`, validates `ansible.windows` immediately after installation, and then runs `provisioning/scripts/check_required_collections.sh` to confirm all required collections are present before `provisioning/playbook.yml` starts.
 
 ## Role functional requirements
 
