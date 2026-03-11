@@ -98,4 +98,5 @@
 - name: Stage trainee lab resources
   hosts: trainees
   roles:
+    - role: windows
     - role: trainee-workstation
